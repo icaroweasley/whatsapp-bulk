@@ -1,0 +1,967 @@
+import { useState, useRef, useEffect } from 'react';
+import type { ChangeEvent } from 'react';
+import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus } from 'lucide-react';
+
+interface Contact {
+  id: string;
+  pushName?: string;
+  name?: string;
+  number: string;
+  status?: 'pending' | 'sent' | 'error';
+}
+
+interface SavedList {
+  id: string;
+  name: string;
+  contacts: Contact[];
+  instanceName?: string;
+}
+
+interface LogEntry {
+  id: number;
+  text: string;
+  status: 'pending' | 'success' | 'error';
+  timestamp: Date;
+}
+
+interface MediaAttachment {
+  id: string;
+  base64: string;
+  name: string;
+  type: string;
+}
+
+function App() {
+  // Navigation State
+  const [currentScreen, setCurrentScreen] = useState<1 | 2 | 3>(1);
+
+  // API Config State
+  const [baseUrl, setBaseUrl] = useState(() => localStorage.getItem('evo_baseUrl') || '');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('evo_apiKey') || '');
+  const [instanceName, setInstanceName] = useState(() => localStorage.getItem('evo_instanceName') || '');
+  
+  // Contacts State
+  const [allContacts, setAllContacts] = useState<Contact[]>([]);
+  const [selectedAllContacts, setSelectedAllContacts] = useState<Set<string>>(new Set());
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [searchAll, setSearchAll] = useState('');
+
+  // Target List State
+  const [targetContacts, setTargetContacts] = useState<Contact[]>(() => {
+    const loaded = localStorage.getItem('evo_targetContacts');
+    if (loaded) { try { return JSON.parse(loaded); } catch(e) {} }
+    return [];
+  });
+  const [selectedTargetContacts, setSelectedTargetContacts] = useState<Set<string>>(new Set());
+  const [searchTarget, setSearchTarget] = useState('');
+  const [listName, setListName] = useState('');
+  const [selectedListId, setSelectedListId] = useState('');
+  const [savedLists, setSavedLists] = useState<SavedList[]>(() => {
+    const loaded = localStorage.getItem('evolution_saved_lists');
+    if (loaded) { try { return JSON.parse(loaded); } catch(e) {} }
+    return [];
+  });
+
+  // Message State
+  const [message, setMessage] = useState(() => localStorage.getItem('evo_message') || '');
+  const [mediaAttachments, setMediaAttachments] = useState<MediaAttachment[]>([]);
+  
+  // Broadcast State
+  const [isSending, setIsSending] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Sync state to localStorage
+  useEffect(() => { localStorage.setItem('evo_baseUrl', baseUrl); }, [baseUrl]);
+  useEffect(() => { localStorage.setItem('evo_apiKey', apiKey); }, [apiKey]);
+  useEffect(() => { localStorage.setItem('evo_instanceName', instanceName); }, [instanceName]);
+  useEffect(() => { localStorage.setItem('evo_message', message); }, [message]);
+  useEffect(() => { localStorage.setItem('evo_targetContacts', JSON.stringify(targetContacts)); }, [targetContacts]);
+  useEffect(() => { localStorage.setItem('evolution_saved_lists', JSON.stringify(savedLists)); }, [savedLists]);
+
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const addLog = (text: string, status: 'pending' | 'success' | 'error') => {
+    setLogs(prev => [...prev, { id: Date.now(), text, status, timestamp: new Date() }]);
+  };
+
+  const clearLogs = () => setLogs([]);
+
+  const getHeaders = () => {
+    return {
+      'Content-Type': 'application/json',
+      'apikey': apiKey,
+      'ngrok-skip-browser-warning': 'true',
+      'Bypass-Tunnel-Reminder': 'true'
+    };
+  };
+
+  const fetchContacts = async () => {
+    if (!baseUrl || !apiKey || !instanceName) {
+      alert('Por favor, preencha a Base URL, API Key e o Nome da Instância.');
+      return;
+    }
+
+    setIsLoadingContacts(true);
+
+    let cleanBaseUrl = baseUrl.trim().replace(/\/$/, '');
+    if (!cleanBaseUrl.startsWith('http://') && !cleanBaseUrl.startsWith('https://')) {
+      cleanBaseUrl = 'https://' + cleanBaseUrl;
+    }
+
+    const endpointsToTry = [
+      { path: `/chat/findContacts/${instanceName}`, method: 'POST', body: {} },
+      { path: `/v2/chat/findContacts/${instanceName}`, method: 'POST', body: {} },
+      { path: `/contact/find/${instanceName}`, method: 'POST', body: {} },
+      { path: `/v2/contact/fetchContacts/${instanceName}`, method: 'GET' },
+      { path: `/contact/fetchContacts/${instanceName}`, method: 'GET' },
+      { path: `/chat/fetchContacts/${instanceName}`, method: 'GET' }
+    ];
+
+    let success = false;
+
+    for (const endpoint of endpointsToTry) {
+      try {
+        const fetchOptions: RequestInit = {
+          method: endpoint.method,
+          headers: {
+            ...getHeaders(),
+            'x-target-url': cleanBaseUrl
+          }
+        };
+
+        if (endpoint.method === 'POST') {
+          fetchOptions.body = JSON.stringify((endpoint as any).body || {});
+        }
+
+        const response = await fetch(`/api-proxy${endpoint.path}`, fetchOptions);
+        const textResponse = await response.text();
+
+        if (response.ok) {
+          let data;
+          try {
+             data = JSON.parse(textResponse);
+          } catch (err) {
+             continue;
+          }
+
+          const contactsList = Array.isArray(data) ? data : (data.contacts || data.data || []);
+          
+          const formattedContacts: Contact[] = contactsList.map((c: any) => {
+            // Tática de caça: transforma o contato inteiro em texto e acha o número real (DDD + Numero)
+            const cString = JSON.stringify(c);
+            const match = cString.match(/\b(55\d{10,11})\b/);
+            
+            let actualNumber = '';
+            let rawId = '';
+
+            if (match) {
+              // Achou um número válido do Brasil perdido em alguma variável!
+              actualNumber = match[1];
+              rawId = actualNumber + '@s.whatsapp.net';
+            } else {
+              // Fallback original
+              rawId = c.id || c.remoteJid || c.number || '';
+              actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
+              actualNumber = actualNumber.replace(/\D/g, '');
+              
+              if (typeof rawId === 'string' && !rawId.includes('@') && actualNumber.length >= 14 && !actualNumber.startsWith('55')) {
+                rawId = actualNumber + '@lid';
+              }
+            }
+            
+            return {
+              id: rawId,
+              pushName: c.pushName,
+              name: c.name,
+              number: actualNumber,
+              status: 'pending'
+            };
+          }).filter((c: Contact) => {
+            if (!c.number) return false;
+            const lowerId = String(c.id).toLowerCase();
+            // Remove grupos e listas de transmissão
+            if (lowerId.includes('g.us') || lowerId.includes('broadcast')) return false;
+            // Garante que tenha um número de telefone com tamanho mínimo aceitável
+            return c.number.length >= 8;
+          });
+
+          setAllContacts(formattedContacts);
+          setSelectedAllContacts(new Set());
+          success = true;
+          break;
+        }
+      } catch (error) {
+        // silently try next
+      }
+    }
+    
+    if (!success) {
+      alert('Falha ao buscar contatos. Verifique os dados da API.');
+    }
+
+    setIsLoadingContacts(false);
+  };
+
+  // --- List Management ---
+  const filteredAllContacts = allContacts.filter(c => 
+    c.name?.toLowerCase().includes(searchAll.toLowerCase()) || 
+    c.number.includes(searchAll) ||
+    c.pushName?.toLowerCase().includes(searchAll.toLowerCase())
+  );
+
+  const filteredTargetContacts = targetContacts.filter(c => 
+    c.name?.toLowerCase().includes(searchTarget.toLowerCase()) || 
+    c.number.includes(searchTarget) ||
+    c.pushName?.toLowerCase().includes(searchTarget.toLowerCase())
+  );
+
+  const toggleAllSelection = (id: string) => {
+    const newSelected = new Set(selectedAllContacts);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedAllContacts(newSelected);
+  };
+
+  const toggleAllAllSelection = () => {
+    if (selectedAllContacts.size === filteredAllContacts.length) {
+      setSelectedAllContacts(new Set());
+    } else {
+      setSelectedAllContacts(new Set(filteredAllContacts.map(c => c.id)));
+    }
+  };
+
+  const toggleTargetSelection = (id: string) => {
+    const newSelected = new Set(selectedTargetContacts);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedTargetContacts(newSelected);
+  };
+
+  const toggleAllTargetSelection = () => {
+    if (selectedTargetContacts.size === filteredTargetContacts.length) {
+      setSelectedTargetContacts(new Set());
+    } else {
+      setSelectedTargetContacts(new Set(filteredTargetContacts.map(c => c.id)));
+    }
+  };
+
+  const moveSelectedToTarget = () => {
+    const toAdd = allContacts.filter(c => selectedAllContacts.has(c.id));
+    const newTarget = [...targetContacts];
+    
+    toAdd.forEach(contact => {
+      if (!newTarget.find(t => t.id === contact.id)) {
+        newTarget.push({ ...contact, status: 'pending' });
+      }
+    });
+    
+    setTargetContacts(newTarget);
+    setSelectedAllContacts(new Set());
+  };
+
+  const removeSelectedFromTarget = () => {
+    const newTarget = targetContacts.filter(c => !selectedTargetContacts.has(c.id));
+    setTargetContacts(newTarget);
+    setSelectedTargetContacts(new Set());
+  };
+
+  const saveCurrentList = () => {
+    if (!listName.trim()) {
+      alert("Por favor, digite um nome para a lista.");
+      return;
+    }
+    if (targetContacts.length === 0) {
+      alert("A lista alvo está vazia.");
+      return;
+    }
+
+    const newId = Date.now().toString();
+    const newList: SavedList = {
+      id: newId,
+      name: listName.trim(),
+      contacts: targetContacts.map(c => ({...c, status: 'pending'})), // reset status
+      instanceName
+    };
+
+    setSavedLists(prev => [...prev.filter(l => l.name !== newList.name), newList]);
+    setSelectedListId(newId);
+    alert(`Lista "${newList.name}" salva com sucesso!`);
+  };
+
+  const loadSavedList = (e: ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    if (!id) return;
+    
+    const list = savedLists.find(l => l.id === id);
+    if (list) {
+      setTargetContacts(list.contacts.map(c => ({...c, status: 'pending'})));
+      setListName(list.name);
+      setSelectedListId(list.id);
+      setSelectedTargetContacts(new Set());
+    }
+  };
+
+  const deleteList = (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta lista permanentemente?")) {
+      setSavedLists(prev => prev.filter(l => l.id !== id));
+      if (selectedListId === id) {
+        setSelectedListId('');
+        setListName('');
+        setTargetContacts([]);
+      }
+    }
+  };
+
+
+
+
+  // --- Media & Broadcast ---
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const maxSize = 5 * 1024 * 1024; // 5MB limit
+      Array.from(files).forEach(file => {
+        if (file.size > maxSize) {
+          alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). O limite da Evolution API para envio em Base64 é de no máximo 5MB. Por favor, use um arquivo menor.`);
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMediaAttachments(prev => [...prev, {
+            id: Date.now().toString() + Math.random().toString(),
+            base64: reader.result as string,
+            name: file.name,
+            type: file.type
+          }]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeMedia = (id: string) => {
+    setMediaAttachments(prev => prev.filter(m => m.id !== id));
+  };
+
+  const insertNamePlaceholder = () => {
+    setMessage(prev => prev + '{nome}');
+  };
+
+  const startBroadcast = async () => {
+    if (targetContacts.length === 0) {
+      alert('A lista de disparo está vazia.');
+      return;
+    }
+    if (!message && mediaAttachments.length === 0) {
+      alert('Digite uma mensagem ou anexe uma mídia para enviar.');
+      return;
+    }
+
+    setIsSending(true);
+    addLog(`Iniciando disparo para ${targetContacts.length} contatos...`, 'pending');
+
+    let cleanBaseUrl = baseUrl.trim().replace(/\/$/, '');
+    if (!cleanBaseUrl.startsWith('http://') && !cleanBaseUrl.startsWith('https://')) {
+      cleanBaseUrl = 'https://' + cleanBaseUrl;
+    }
+
+    let sentCount = 0;
+
+    for (let i = 0; i < targetContacts.length; i++) {
+      const contact = targetContacts[i];
+      
+      setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'pending' } : c));
+      
+      try {
+        const personalizedMessage = message.replace(/{nome}/gi, contact.name || contact.pushName || 'cliente');
+
+        // Anti-ban: Simular digitação
+        const typingDelayMs = Math.min(8000, Math.max(2000, personalizedMessage.length * 50));
+        const typingSeconds = (typingDelayMs / 1000).toFixed(1);
+        
+        addLog(`Simulando digitação para ${contact.name || contact.number} (${typingSeconds}s)...`, 'pending');
+        
+        try {
+            await fetch(`/api-proxy/chat/sendPresence/${instanceName}`, {
+               method: 'POST',
+               headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
+               body: JSON.stringify({ number: contact.id, presence: 'composing', delay: typingDelayMs })
+            });
+        } catch(e) {}
+        
+        await new Promise(resolve => setTimeout(resolve, typingDelayMs));
+
+        let contactSuccess = false;
+        let contactErrorMsg = '';
+        
+        if (mediaAttachments.length > 0) {
+           for (let mIndex = 0; mIndex < mediaAttachments.length; mIndex++) {
+              const attachment = mediaAttachments[mIndex];
+              const endpoint = `/message/sendMedia/${instanceName}`;
+              let finalMedia = attachment.base64;
+              if (finalMedia.includes('base64,')) {
+                  finalMedia = finalMedia.split('base64,')[1];
+              }
+
+              const body = {
+                number: contact.id,
+                mediatype: attachment.type.startsWith('video') ? "video" : "image",
+                mimetype: attachment.type || "image/jpeg",
+                fileName: attachment.name || "media",
+                caption: mIndex === 0 ? personalizedMessage : "",
+                media: finalMedia
+              };
+
+              const response = await fetch(`/api-proxy${endpoint}`, {
+                method: 'POST',
+                headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
+                body: JSON.stringify(body)
+              });
+
+              const textResponse = await response.text();
+              
+              if (!response.ok) {
+                 contactErrorMsg = response.status.toString();
+                 try {
+                    const parsedErr = JSON.parse(textResponse);
+                    contactErrorMsg += ' - ' + (parsedErr.message || JSON.stringify(parsedErr));
+                 } catch(e) {
+                    contactErrorMsg += ' - ' + textResponse.substring(0, 60);
+                 }
+                 break;
+              } else {
+                 try {
+                    JSON.parse(textResponse);
+                    contactSuccess = true;
+                 } catch (e) {
+                    contactErrorMsg = "Erro de JSON na resposta";
+                    contactSuccess = false;
+                    break;
+                 }
+              }
+
+              if (mIndex < mediaAttachments.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+              }
+           }
+        } else {
+           const endpoint = `/message/sendText/${instanceName}`;
+           const body = { number: contact.id, text: personalizedMessage };
+           const response = await fetch(`/api-proxy${endpoint}`, {
+              method: 'POST',
+              headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
+              body: JSON.stringify(body)
+           });
+           const textResponse = await response.text();
+           if (response.ok) {
+               try {
+                  JSON.parse(textResponse);
+                  contactSuccess = true;
+               } catch (e) {
+                  contactErrorMsg = "Erro de JSON na resposta";
+               }
+           } else {
+               contactErrorMsg = response.status.toString();
+               try {
+                  const parsedErr = JSON.parse(textResponse);
+                  contactErrorMsg += ' - ' + (parsedErr.message || JSON.stringify(parsedErr));
+               } catch(e) {
+                  contactErrorMsg += ' - ' + textResponse.substring(0, 60);
+               }
+           }
+        }
+
+        if (contactSuccess && !contactErrorMsg) {
+           setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'sent' } : c));
+           sentCount++;
+           addLog(`Enviado para ${contact.name || contact.number}`, 'success');
+        } else {
+           setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
+           addLog(`Erro ao enviar para ${contact.number}: ${contactErrorMsg}`, 'error');
+        }
+      } catch (error) {
+        setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
+        addLog(`Falha de conexão com ${contact.number}`, 'error');
+      }
+
+      if (i < targetContacts.length - 1) {
+        const delayMs = Math.floor(Math.random() * (45000 - 15000 + 1)) + 15000;
+        const delaySeconds = (delayMs / 1000).toFixed(1);
+        addLog(`Aguardando ${delaySeconds}s para evitar bloqueio...`, 'pending');
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+
+    addLog(`Disparo concluído! ${sentCount} mensagens enviadas.`, 'success');
+    setIsSending(false);
+  };
+
+  const nextScreen = (screen: 1 | 2 | 3) => {
+    if (screen === 2) {
+      if (!baseUrl || !apiKey || !instanceName) {
+        alert("Preencha todos os campos da API antes de avançar.");
+        return;
+      }
+      if (allContacts.length === 0) fetchContacts();
+    }
+    if (screen === 3) {
+      if (targetContacts.length === 0) {
+        if (!confirm("A lista alvo está vazia. Deseja avançar mesmo assim?")) return;
+      }
+    }
+    setCurrentScreen(screen);
+  };
+
+  return (
+    <div className="relative min-h-screen font-sans text-white bg-black overflow-x-hidden">
+      {/* Background Video with Gradient Overlay */}
+      <div className="fixed inset-0 z-0">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="w-full h-full object-cover opacity-50 mix-blend-luminosity"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none"></div>
+      </div>
+
+      {/* Main Content Wrapper */}
+      <div className="relative z-10 flex flex-col min-h-screen p-4 lg:p-8 max-w-[1920px] mx-auto">
+        
+        {/* Header / Nav */}
+        <header className="flex items-center justify-between mb-10 px-2 lg:px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              <MessageSquare size={18} className="text-black" fill="currentColor" />
+            </div>
+            <span className="font-semibold text-2xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+          </div>
+          
+          {/* Steps Indicator */}
+          <div className="hidden md:flex items-center gap-2 liquid-glass border border-white/10 rounded-full px-2 py-1.5 shadow-lg">
+            <button onClick={() => setCurrentScreen(1)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
+            <div className="w-4 h-[1px] bg-white/10"></div>
+            <button onClick={() => nextScreen(2)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
+            <div className="w-4 h-[1px] bg-white/10"></div>
+            <button onClick={() => nextScreen(3)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
+          </div>
+        </header>
+
+        {/* SCREEN 1: CONNECTION */}
+        {currentScreen === 1 && (
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto">
+            <h1 className="text-5xl lg:text-7xl font-light tracking-tight text-white mb-10 leading-tight text-center">
+              Conecte sua <span className="font-serif italic text-white/80">instância</span>
+            </h1>
+
+            <div className="liquid-panel w-full rounded-[2rem] p-8 lg:p-10 space-y-6">
+              <div>
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">URL Base da API</label>
+                <input 
+                  type="text" 
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder="https://sua-api.com"
+                  className="liquid-glass w-full rounded-2xl px-5 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 text-sm transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Global API Key</label>
+                <input 
+                  type="password" 
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Sua chave secreta"
+                  className="liquid-glass w-full rounded-2xl px-5 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 text-sm transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Nome da Instância</label>
+                <input 
+                  type="text" 
+                  value={instanceName}
+                  onChange={(e) => setInstanceName(e.target.value)}
+                  placeholder="ex: karu"
+                  className="liquid-glass w-full rounded-2xl px-5 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 text-sm transition-all"
+                />
+              </div>
+
+              <div className="pt-6 flex justify-end">
+                <button 
+                  onClick={() => nextScreen(2)}
+                  className="bg-white text-black hover:bg-white/90 rounded-full px-8 py-3.5 flex items-center gap-3 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                >
+                  <span className="text-sm font-semibold">Salvar e Avançar</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 2: LIST MANAGEMENT */}
+        {currentScreen === 2 && (
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full max-h-[calc(100vh-140px)]">
+            
+            {/* Left Panel: Fetched Contacts */}
+            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] flex flex-col p-2 overflow-hidden">
+              <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-xl font-medium text-white tracking-tight">Contatos da Instância</h2>
+                  <p className="text-xs text-white/50 mt-1">Busque os contatos diretamente da sua API.</p>
+                </div>
+                <button 
+                  onClick={fetchContacts}
+                  disabled={isLoadingContacts}
+                  className="liquid-glass border border-white/10 rounded-full px-5 py-2.5 text-xs font-semibold flex items-center gap-2 hover:bg-white/10 transition-colors disabled:opacity-50"
+                >
+                  <Users size={14} />
+                  {isLoadingContacts ? 'Buscando...' : 'Buscar da API'}
+                </button>
+              </div>
+
+              <div className="px-5 pb-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                  <input 
+                    type="text" 
+                    value={searchAll}
+                    onChange={(e) => setSearchAll(e.target.value)}
+                    placeholder="Pesquisar contatos..."
+                    className="liquid-glass w-full rounded-full pl-11 pr-4 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
+                {allContacts.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-white/50 text-center p-6">
+                    <Users size={32} className="mb-4 opacity-50" />
+                    <p className="text-sm">Nenhum contato carregado.</p>
+                    <p className="text-xs mt-1">Clique em "Buscar da API" para sincronizar.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/20 backdrop-blur-md rounded-lg mb-2 z-10">
+                      <input 
+                        type="checkbox" 
+                        checked={allContacts.length > 0 && selectedAllContacts.size === filteredAllContacts.length}
+                        onChange={toggleAllAllSelection}
+                        className="mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                      />
+                      <div className="flex-1">Identidade ({filteredAllContacts.length})</div>
+                    </div>
+                    
+                    {filteredAllContacts.map(contact => (
+                      <div key={contact.id} onClick={() => toggleAllSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedAllContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedAllContacts.has(contact.id)}
+                          readOnly
+                          className="ml-1 mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                        />
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
+                          <span className="text-xs text-white/50 truncate mt-0.5">{contact.number}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 border-t border-white/5 mt-auto">
+                <button 
+                  onClick={moveSelectedToTarget}
+                  disabled={selectedAllContacts.size === 0}
+                  className="w-full bg-white text-black hover:bg-white/90 rounded-2xl py-3.5 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:bg-white/20 disabled:text-white/50 font-semibold"
+                >
+                  <span className="text-sm">Mover Selecionados para Alvo</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Panel: Target List */}
+            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] flex flex-col p-2 overflow-hidden relative">
+              <div className="p-5 flex flex-col gap-5">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-medium text-white tracking-tight">Lista de Disparo (Alvo)</h2>
+                  <span className="liquid-glass border border-white/10 px-4 py-1.5 rounded-full text-xs font-medium text-white/90">
+                    {targetContacts.length} contatos
+                  </span>
+                </div>
+                
+                {/* List Management UI */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 liquid-glass rounded-2xl bg-black/20">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Listas Salvas</label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <FolderOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+                        <select 
+                          value={selectedListId}
+                          onChange={loadSavedList} 
+                          className="liquid-glass w-full rounded-xl pl-9 pr-3 py-2 text-xs text-white/80 focus:outline-none appearance-none cursor-pointer hover:bg-white/5 bg-transparent"
+                        >
+                          <option value="" disabled className="text-black bg-white">Selecione uma lista...</option>
+                          {savedLists.filter(l => !l.instanceName || l.instanceName === instanceName).map(list => (
+                            <option key={list.id} value={list.id} className="text-black bg-white">{list.name} ({list.contacts.length})</option>
+                          ))}
+                        </select>
+                      </div>
+                      {selectedListId && (
+                        <button onClick={() => deleteList(selectedListId)} className="liquid-glass p-2 rounded-xl hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors" title="Excluir Lista Selecionada">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Salvar Lista Alvo</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={listName}
+                        onChange={(e) => setListName(e.target.value)}
+                        placeholder="Nome da lista" 
+                        className="liquid-glass flex-1 rounded-xl px-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none"
+                      />
+                      <button onClick={saveCurrentList} className="liquid-glass p-2 rounded-xl hover:bg-white/10" title="Salvar Lista">
+                        <Save size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 pb-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                  <input 
+                    type="text" 
+                    value={searchTarget}
+                    onChange={(e) => setSearchTarget(e.target.value)}
+                    placeholder="Filtrar na lista alvo..."
+                    className="liquid-glass w-full rounded-full pl-11 pr-4 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
+                {targetContacts.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-white/50 text-center p-6">
+                    <Plus size={32} className="mb-4 opacity-50" />
+                    <p className="text-sm">A lista de disparo está vazia.</p>
+                    <p className="text-xs mt-1">Selecione contatos à esquerda e clique em Mover, ou carregue uma lista salva acima.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/20 backdrop-blur-md rounded-lg mb-2 z-10">
+                      <input 
+                        type="checkbox" 
+                        checked={targetContacts.length > 0 && selectedTargetContacts.size === filteredTargetContacts.length}
+                        onChange={toggleAllTargetSelection}
+                        className="mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                      />
+                      <div className="flex-1">Lista Alvo ({filteredTargetContacts.length})</div>
+                    </div>
+                    
+                    {filteredTargetContacts.map(contact => (
+                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedTargetContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedTargetContacts.has(contact.id)}
+                          readOnly
+                          className="ml-1 mr-4 rounded-sm border-red-300/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                        />
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
+                          <span className="text-xs text-white/50 truncate mt-0.5">{contact.number}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 border-t border-white/5 mt-auto flex gap-3">
+                <button 
+                  onClick={removeSelectedFromTarget}
+                  disabled={selectedTargetContacts.size === 0}
+                  className="liquid-glass border border-white/10 rounded-2xl px-5 py-3.5 flex items-center justify-center hover:bg-red-500/20 hover:text-red-300 transition-colors disabled:opacity-50 text-white/70"
+                  title="Remover selecionados"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <button 
+                  onClick={() => nextScreen(3)}
+                  disabled={targetContacts.length === 0}
+                  className="flex-1 bg-white text-black hover:bg-white/90 rounded-2xl py-3.5 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:bg-white/20 disabled:text-white/50 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                >
+                  <span className="text-sm font-semibold">Avançar para Mensagem</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SCREEN 3: BROADCAST */}
+        {currentScreen === 3 && (
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full max-h-[calc(100vh-140px)]">
+            
+            {/* Left Panel: Compose Message */}
+            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] p-6 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar">
+              
+              <button onClick={() => setCurrentScreen(2)} className="flex items-center gap-2 text-white/50 hover:text-white text-xs mb-8 transition-colors w-max font-medium uppercase tracking-wider">
+                <ArrowLeft size={14} /> Voltar
+              </button>
+
+              <h2 className="text-4xl font-light tracking-tight text-white mb-10">
+                Configure a <span className="font-serif italic text-white/80">Mensagem</span>
+              </h2>
+
+              <div className="space-y-6 flex-1">
+                {/* Message Input */}
+                <div>
+                  <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-3">Texto da Mensagem</label>
+                  <div className="relative">
+                    <textarea 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Olá, {nome}! Tudo bem? Gostaria de compartilhar algo especial com você."
+                      className="liquid-glass w-full h-48 rounded-2xl p-5 text-sm text-white placeholder-white/40 resize-none outline-none focus:ring-1 focus:ring-white/30 transition-all"
+                    />
+                    <button 
+                      onClick={insertNamePlaceholder}
+                      className="absolute bottom-4 right-4 liquid-glass-strong text-xs font-medium px-3 py-1.5 rounded-full hover:scale-105 transition-transform bg-white/5"
+                    >
+                      + NOME
+                    </button>
+                  </div>
+                </div>
+
+                {/* Media Upload */}
+                <div>
+                  <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-3">Mídia (Opcional)</label>
+                  
+                  {mediaAttachments.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {mediaAttachments.map((media) => (
+                        <div key={media.id} className="liquid-glass rounded-xl p-3 flex items-center justify-between group hover:bg-white/5 transition-colors border border-white/5">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                              <ImageIcon size={16} className="text-white" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-white/90 truncate">{media.name}</span>
+                              <span className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1"><CheckCircle2 size={10} /> Pronto</span>
+                            </div>
+                          </div>
+                          <button onClick={() => removeMedia(media.id)} className="p-2 hover:bg-white/10 rounded-full transition-colors bg-white/5 shrink-0 ml-2">
+                            <Trash2 size={14} className="text-white/80 hover:text-white" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="liquid-glass rounded-2xl h-16 flex items-center justify-center relative group hover:bg-white/5 transition-colors border border-white/5 border-dashed cursor-pointer">
+                    <label className="flex items-center justify-center w-full h-full cursor-pointer gap-3">
+                      <Upload size={16} className="text-white/50 group-hover:text-white transition-colors" />
+                      <span className="text-sm font-medium text-white/50 group-hover:text-white transition-colors">Clique para anexar mídias</span>
+                      <input type="file" accept="image/*,video/*" multiple onChange={handleFileUpload} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel: Summary & Console */}
+            <div className="w-full lg:w-1/2 flex flex-col gap-6">
+              
+              {/* Summary Card */}
+              <div className="liquid-panel rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
+                <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4">Resumo do Disparo</h3>
+                <div className="text-7xl font-light tracking-tighter text-white mb-3">
+                  {targetContacts.length}
+                </div>
+                <p className="text-sm text-white/60 font-medium">contatos na fila de envio</p>
+                
+                <button 
+                  onClick={startBroadcast}
+                  disabled={isSending || targetContacts.length === 0 || (!message && mediaAttachments.length === 0)}
+                  className="mt-10 bg-white text-black rounded-full pl-8 pr-3 py-3 flex items-center gap-6 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                >
+                  <span className="text-base font-semibold">{isSending ? 'Enviando...' : 'Iniciar Disparo'}</span>
+                  <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
+                    <Play size={20} fill="currentColor" className="text-black ml-1" />
+                  </div>
+                </button>
+              </div>
+
+              {/* Activity Console */}
+              <div className="liquid-panel rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
+                 <div className="px-6 py-5 flex justify-between items-center border-b border-white/5">
+                   <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Console de Atividade</span>
+                   <button onClick={clearLogs} className="text-[10px] uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors">Limpar</button>
+                 </div>
+                 <div className="flex-1 overflow-y-auto p-5 text-xs font-mono space-y-3 custom-scrollbar">
+                   {logs.length === 0 ? (
+                     <div className="text-white/30 h-full flex items-center justify-center italic">Nenhuma atividade recente.</div>
+                   ) : (
+                     logs.map(log => (
+                       <div key={log.id} className="flex items-start gap-3">
+                         <span className="text-white/30 shrink-0">[{log.timestamp.toLocaleTimeString()}]</span>
+                         <span className={`break-all ${
+                           log.status === 'error' ? 'text-red-300' : 
+                           log.status === 'success' ? 'text-emerald-300' : 
+                           'text-white/70'
+                         }`}>
+                           {log.text}
+                         </span>
+                       </div>
+                     ))
+                   )}
+                   <div ref={logsEndRef} />
+                 </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.2);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.3);
+        }
+      `}} />
+    </div>
+  );
+}
+
+export default App;
