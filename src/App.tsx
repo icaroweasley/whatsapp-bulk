@@ -788,7 +788,7 @@ function App() {
                       <div className="flex-1">Identidade ({filteredAllContacts.length})</div>
                     </div>
                     
-                    {filteredAllContacts.map(contact => (
+                    {filteredAllContacts.slice(0, 150).map(contact => (
                       <div key={contact.id} onClick={() => toggleAllSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedAllContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
                         <input 
                           type="checkbox" 
@@ -802,6 +802,11 @@ function App() {
                         </div>
                       </div>
                     ))}
+                    {filteredAllContacts.length > 150 && (
+                      <div className="text-center text-[11px] text-white/40 py-4 italic font-medium tracking-wide">
+                        Mostrando 150 de {filteredAllContacts.length} contatos. Use a busca para refinar.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -904,7 +909,7 @@ function App() {
                       <div className="flex-1">Lista Alvo ({filteredTargetContacts.length})</div>
                     </div>
                     
-                    {filteredTargetContacts.map(contact => (
+                    {filteredTargetContacts.slice(0, 150).map(contact => (
                       <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedTargetContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
                         <input 
                           type="checkbox" 
@@ -918,6 +923,11 @@ function App() {
                         </div>
                       </div>
                     ))}
+                    {filteredTargetContacts.length > 150 && (
+                      <div className="text-center text-[11px] text-white/40 py-4 italic font-medium tracking-wide">
+                        Mostrando 150 de {filteredTargetContacts.length} contatos. Use a busca para refinar.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
