@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
-import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus } from 'lucide-react';
+import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -15,6 +15,12 @@ interface SavedList {
   name: string;
   contacts: Contact[];
   instanceName?: string;
+}
+
+interface SavedInstance {
+  instanceName: string;
+  baseUrl: string;
+  apiKey: string;
 }
 
 interface LogEntry {
@@ -39,6 +45,11 @@ function App() {
   const [baseUrl, setBaseUrl] = useState(() => localStorage.getItem('evo_baseUrl') || '');
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('evo_apiKey') || '');
   const [instanceName, setInstanceName] = useState(() => localStorage.getItem('evo_instanceName') || '');
+  const [savedInstances, setSavedInstances] = useState<SavedInstance[]>(() => {
+    const loaded = localStorage.getItem('evolution_saved_instances');
+    if (loaded) { try { return JSON.parse(loaded); } catch(e) {} }
+    return [];
+  });
   
   // Contacts State
   const [allContacts, setAllContacts] = useState<Contact[]>([]);
@@ -47,11 +58,7 @@ function App() {
   const [searchAll, setSearchAll] = useState('');
 
   // Target List State
-  const [targetContacts, setTargetContacts] = useState<Contact[]>(() => {
-    const loaded = localStorage.getItem('evo_targetContacts');
-    if (loaded) { try { return JSON.parse(loaded); } catch(e) {} }
-    return [];
-  });
+  const [targetContacts, setTargetContacts] = useState<Contact[]>([]);
   const [selectedTargetContacts, setSelectedTargetContacts] = useState<Set<string>>(new Set());
   const [searchTarget, setSearchTarget] = useState('');
   const [listName, setListName] = useState('');
@@ -68,17 +75,37 @@ function App() {
   
   // Broadcast State
   const [isSending, setIsSending] = useState(false);
+  const [isPausedUI, setIsPausedUI] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   
+  const isPausedRef = useRef(false);
+  const isCancelledRef = useRef(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // Sync state to localStorage
   useEffect(() => { localStorage.setItem('evo_baseUrl', baseUrl); }, [baseUrl]);
   useEffect(() => { localStorage.setItem('evo_apiKey', apiKey); }, [apiKey]);
-  useEffect(() => { localStorage.setItem('evo_instanceName', instanceName); }, [instanceName]);
   useEffect(() => { localStorage.setItem('evo_message', message); }, [message]);
-  useEffect(() => { localStorage.setItem('evo_targetContacts', JSON.stringify(targetContacts)); }, [targetContacts]);
   useEffect(() => { localStorage.setItem('evolution_saved_lists', JSON.stringify(savedLists)); }, [savedLists]);
+
+  // Handle instance changes
+  useEffect(() => { 
+    localStorage.setItem('evo_instanceName', instanceName); 
+    const loaded = localStorage.getItem(`evo_targetContacts_${instanceName}`);
+    if (loaded) { try { setTargetContacts(JSON.parse(loaded)); } catch(e) { setTargetContacts([]); } }
+    else { setTargetContacts([]); }
+    // Clean up temporary states when instance changes
+    setAllContacts([]);
+    setSelectedListId('');
+    setListName('');
+  }, [instanceName]);
+
+  // Save active target contacts per instance
+  useEffect(() => { 
+    if (instanceName) {
+      localStorage.setItem(`evo_targetContacts_${instanceName}`, JSON.stringify(targetContacts)); 
+    }
+  }, [targetContacts, instanceName]);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -287,7 +314,7 @@ function App() {
       instanceName
     };
 
-    setSavedLists(prev => [...prev.filter(l => l.name !== newList.name), newList]);
+    setSavedLists(prev => [...prev.filter(l => !(l.name === newList.name && l.instanceName === instanceName)), newList]);
     setSelectedListId(newId);
     alert(`Lista "${newList.name}" salva com sucesso!`);
   };
@@ -363,6 +390,9 @@ function App() {
     }
 
     setIsSending(true);
+    setIsPausedUI(false);
+    isPausedRef.current = false;
+    isCancelledRef.current = false;
     addLog(`Iniciando disparo para ${targetContacts.length} contatos...`, 'pending');
 
     let cleanBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -373,6 +403,14 @@ function App() {
     let sentCount = 0;
 
     for (let i = 0; i < targetContacts.length; i++) {
+      while (isPausedRef.current && !isCancelledRef.current) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      if (isCancelledRef.current) {
+        addLog(`Disparo cancelado pelo usuário.`, 'error');
+        break;
+      }
+
       const contact = targetContacts[i];
       
       setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'pending' } : c));
@@ -380,8 +418,17 @@ function App() {
       try {
         const personalizedMessage = message.replace(/{nome}/gi, contact.name || contact.pushName || 'cliente');
 
+        let targetJid = contact.id;
+        if (!targetJid.includes('@')) {
+           if (contact.number && /^\d+$/.test(contact.number)) {
+              targetJid = contact.number + '@s.whatsapp.net';
+           } else {
+              targetJid = targetJid + '@s.whatsapp.net';
+           }
+        }
+
         // Anti-ban: Simular digitação
-        const typingDelayMs = Math.min(8000, Math.max(2000, personalizedMessage.length * 50));
+        const typingDelayMs = Math.floor(Math.random() * (10000 - 2000 + 1)) + 2000;
         const typingSeconds = (typingDelayMs / 1000).toFixed(1);
         
         addLog(`Simulando digitação para ${contact.name || contact.number} (${typingSeconds}s)...`, 'pending');
@@ -390,11 +437,20 @@ function App() {
             await fetch(`/api-proxy/chat/sendPresence/${instanceName}`, {
                method: 'POST',
                headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
-               body: JSON.stringify({ number: contact.id, presence: 'composing', delay: typingDelayMs })
+               body: JSON.stringify({ number: targetJid, presence: 'composing', delay: typingDelayMs })
             });
         } catch(e) {}
         
-        await new Promise(resolve => setTimeout(resolve, typingDelayMs));
+        let typingWaited = 0;
+        while(typingWaited < typingDelayMs) {
+           if (isCancelledRef.current) break;
+           await new Promise(resolve => setTimeout(resolve, 500));
+           typingWaited += 500;
+        }
+        if (isCancelledRef.current) {
+            addLog(`Disparo cancelado pelo usuário.`, 'error');
+            break;
+        }
 
         let contactSuccess = false;
         let contactErrorMsg = '';
@@ -409,7 +465,7 @@ function App() {
               }
 
               const body = {
-                number: contact.id,
+                number: targetJid,
                 mediatype: attachment.type.startsWith('video') ? "video" : "image",
                 mimetype: attachment.type || "image/jpeg",
                 fileName: attachment.name || "media",
@@ -451,7 +507,7 @@ function App() {
            }
         } else {
            const endpoint = `/message/sendText/${instanceName}`;
-           const body = { number: contact.id, text: personalizedMessage };
+           const body = { number: targetJid, text: personalizedMessage };
            const response = await fetch(`/api-proxy${endpoint}`, {
               method: 'POST',
               headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
@@ -490,10 +546,28 @@ function App() {
       }
 
       if (i < targetContacts.length - 1) {
+        if (isCancelledRef.current) {
+           addLog(`Disparo cancelado pelo usuário.`, 'error');
+           break;
+        }
         const delayMs = Math.floor(Math.random() * (45000 - 15000 + 1)) + 15000;
         const delaySeconds = (delayMs / 1000).toFixed(1);
         addLog(`Aguardando ${delaySeconds}s para evitar bloqueio...`, 'pending');
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        
+        let waited = 0;
+        while (waited < delayMs) {
+          if (isCancelledRef.current) break;
+          while (isPausedRef.current && !isCancelledRef.current) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          if (isCancelledRef.current) break;
+          await new Promise(resolve => setTimeout(resolve, 500));
+          waited += 500;
+        }
+        if (isCancelledRef.current) {
+           addLog(`Disparo cancelado pelo usuário.`, 'error');
+           break;
+        }
       }
     }
 
@@ -507,6 +581,15 @@ function App() {
         alert("Preencha todos os campos da API antes de avançar.");
         return;
       }
+      
+      const newInstance = { instanceName, baseUrl, apiKey };
+      setSavedInstances(prev => {
+        const filtered = prev.filter(i => i.instanceName !== instanceName);
+        const updated = [...filtered, newInstance];
+        localStorage.setItem('evolution_saved_instances', JSON.stringify(updated));
+        return updated;
+      });
+
       if (allContacts.length === 0) fetchContacts();
     }
     if (screen === 3) {
@@ -594,6 +677,41 @@ function App() {
                   className="liquid-glass w-full rounded-2xl px-5 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 text-sm transition-all"
                 />
               </div>
+
+              {savedInstances.length > 0 && (
+                <div className="pt-2 border-t border-white/5">
+                  <label className="block text-[10px] font-medium text-white/40 uppercase tracking-wider mb-3 ml-1">Instâncias Salvas</label>
+                  <div className="flex flex-wrap gap-2">
+                    {savedInstances.map(inst => (
+                      <div
+                        key={inst.instanceName}
+                        onClick={() => {
+                          setInstanceName(inst.instanceName);
+                          setBaseUrl(inst.baseUrl);
+                          setApiKey(inst.apiKey);
+                        }}
+                        className="liquid-glass pl-4 pr-1 py-1 rounded-xl text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer border border-white/5"
+                      >
+                        {inst.instanceName}
+                        <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setSavedInstances(prev => {
+                               const updated = prev.filter(i => i.instanceName !== inst.instanceName);
+                               localStorage.setItem('evolution_saved_instances', JSON.stringify(updated));
+                               return updated;
+                             });
+                           }}
+                           className="p-1.5 hover:bg-red-500/20 text-white/30 hover:text-red-400 rounded-lg transition-colors ml-1"
+                           title="Remover instância salva"
+                        >
+                           <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-6 flex justify-end">
                 <button 
@@ -900,16 +1018,44 @@ function App() {
                 </div>
                 <p className="text-sm text-white/60 font-medium">contatos na fila de envio</p>
                 
-                <button 
-                  onClick={startBroadcast}
-                  disabled={isSending || targetContacts.length === 0 || (!message && mediaAttachments.length === 0)}
-                  className="mt-10 bg-white text-black rounded-full pl-8 pr-3 py-3 flex items-center gap-6 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-                >
-                  <span className="text-base font-semibold">{isSending ? 'Enviando...' : 'Iniciar Disparo'}</span>
-                  <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
-                    <Play size={20} fill="currentColor" className="text-black ml-1" />
+                {!isSending ? (
+                  <button 
+                    onClick={startBroadcast}
+                    disabled={targetContacts.length === 0 || (!message && mediaAttachments.length === 0)}
+                    className="mt-10 bg-white text-black rounded-full pl-8 pr-3 py-3 flex items-center gap-6 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                  >
+                    <span className="text-base font-semibold">Iniciar Disparo</span>
+                    <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
+                      <Play size={20} fill="currentColor" className="text-black ml-1" />
+                    </div>
+                  </button>
+                ) : (
+                  <div className="mt-10 flex gap-4">
+                    <button 
+                      onClick={() => {
+                        isPausedRef.current = !isPausedRef.current;
+                        setIsPausedUI(isPausedRef.current);
+                      }}
+                      className={`liquid-glass rounded-full pl-6 pr-3 py-2 flex items-center gap-4 transition-all hover:scale-105 \${isPausedUI ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-white/10 text-white border-white/20'} border`}
+                    >
+                      <span className="text-sm font-semibold">{isPausedUI ? 'Retomar' : 'Pausar'}</span>
+                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center">
+                        {isPausedUI ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        isCancelledRef.current = true;
+                      }}
+                      className="liquid-glass border border-red-500/50 bg-red-500/10 text-red-400 rounded-full pl-6 pr-3 py-2 flex items-center gap-4 transition-all hover:scale-105 hover:bg-red-500/20"
+                    >
+                      <span className="text-sm font-semibold">Cancelar</span>
+                      <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <Square size={14} fill="currentColor" />
+                      </div>
+                    </button>
                   </div>
-                </button>
+                )}
               </div>
 
               {/* Activity Console */}
