@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useDeferredValue, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square } from 'lucide-react';
 
@@ -234,17 +234,26 @@ function App() {
   };
 
   // --- List Management ---
-  const filteredAllContacts = allContacts.filter(c => 
-    c.name?.toLowerCase().includes(searchAll.toLowerCase()) || 
-    c.number.includes(searchAll) ||
-    c.pushName?.toLowerCase().includes(searchAll.toLowerCase())
-  );
+  const deferredSearchAll = useDeferredValue(searchAll);
+  const deferredSearchTarget = useDeferredValue(searchTarget);
 
-  const filteredTargetContacts = targetContacts.filter(c => 
-    c.name?.toLowerCase().includes(searchTarget.toLowerCase()) || 
-    c.number.includes(searchTarget) ||
-    c.pushName?.toLowerCase().includes(searchTarget.toLowerCase())
-  );
+  const filteredAllContacts = useMemo(() => {
+    const searchLower = deferredSearchAll.toLowerCase();
+    return allContacts.filter(c => 
+      c.name?.toLowerCase().includes(searchLower) || 
+      c.number.includes(deferredSearchAll) ||
+      c.pushName?.toLowerCase().includes(searchLower)
+    );
+  }, [allContacts, deferredSearchAll]);
+
+  const filteredTargetContacts = useMemo(() => {
+    const searchLower = deferredSearchTarget.toLowerCase();
+    return targetContacts.filter(c => 
+      c.name?.toLowerCase().includes(searchLower) || 
+      c.number.includes(deferredSearchTarget) ||
+      c.pushName?.toLowerCase().includes(searchLower)
+    );
+  }, [targetContacts, deferredSearchTarget]);
 
   const toggleAllSelection = (id: string) => {
     const newSelected = new Set(selectedAllContacts);
