@@ -214,21 +214,16 @@ EVOLUTION_API_KEY=evolution_api_key_12345
 N8N_WEBHOOK_URL=http://localhost:5678/
 WEBHOOK_URL=http://localhost:5678/`;
 
-const downloadDockerFiles = () => {
-  const download = (filename: string, content: string) => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-  
-  download('docker-compose.yml', dockerComposeContent);
-  setTimeout(() => download('.env', envContent), 500);
+const downloadFile = (filename: string, content: string) => {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 function App() {
@@ -917,14 +912,24 @@ function App() {
               )}
 
               <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <button 
-                  onClick={downloadDockerFiles}
-                  className="text-white/50 hover:text-white text-xs flex items-center gap-2 transition-colors border border-transparent hover:border-white/10 px-3 py-2 rounded-lg"
-                  title="Baixar arquivos para subir Evolution API + n8n + Redis + Postgres"
-                >
-                  <Download size={14} />
-                  <span>Baixar Config. Docker Local</span>
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => downloadFile('docker-compose.yml', dockerComposeContent)}
+                    className="text-white/50 hover:text-white text-[11px] flex items-center gap-2 transition-colors border border-transparent hover:border-white/10 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10"
+                    title="Baixar docker-compose.yml"
+                  >
+                    <Download size={12} />
+                    <span>docker-compose.yml</span>
+                  </button>
+                  <button 
+                    onClick={() => downloadFile('.env', envContent)}
+                    className="text-white/50 hover:text-white text-[11px] flex items-center gap-2 transition-colors border border-transparent hover:border-white/10 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10"
+                    title="Baixar .env"
+                  >
+                    <Download size={12} />
+                    <span>.env</span>
+                  </button>
+                </div>
                 <button 
                   onClick={() => nextScreen(2)}
                   className="bg-white text-black hover:bg-white/90 rounded-full px-8 py-3.5 flex items-center gap-3 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] w-full sm:w-auto justify-center"
