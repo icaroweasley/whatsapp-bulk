@@ -13,6 +13,8 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const { token, user } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   
   // Form State
   const [isCreating, setIsCreating] = useState(false);
@@ -32,7 +34,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/admin/users', {
+      const res = await fetch(`${API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -53,7 +55,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
 
     try {
-      const res = await fetch('http://localhost:3001/api/admin/users', {
+      const res = await fetch(`${API_URL}/api/admin/users`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -104,7 +106,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     setDeleteError('');
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/users/${deletingUser.id}`, {
+      const res = await fetch(`${API_URL}/api/admin/users/${deletingUser.id}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',

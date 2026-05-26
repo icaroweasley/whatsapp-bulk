@@ -233,6 +233,7 @@ import { Settings } from 'lucide-react';
 
 function AppV2() {
   const { user, token, logout } = useAuth();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   
   // Navigation State
   const [currentScreen, setCurrentScreen] = useState<1 | 2 | 3>(1);
@@ -271,7 +272,7 @@ function AppV2() {
 
   const fetchLists = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/lists', {
+      const res = await fetch(`${API_URL}/api/lists`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -529,7 +530,7 @@ function AppV2() {
 
     try {
       const isNew = !selectedListId;
-      const res = await fetch('http://localhost:3001/api/lists', {
+      const res = await fetch(`${API_URL}/api/lists`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -576,7 +577,7 @@ function AppV2() {
   const deleteList = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta lista permanentemente?")) {
       try {
-        const res = await fetch(`http://localhost:3001/api/lists/${id}`, {
+        const res = await fetch(`${API_URL}/api/lists/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
