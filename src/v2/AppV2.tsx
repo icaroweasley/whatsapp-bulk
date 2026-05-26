@@ -244,11 +244,11 @@ function AppV2() {
   const baseUrl = import.meta.env.VITE_EVOLUTION_URL || '';
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
-    const loaded = localStorage.getItem('evo_selectedInstance');
+    const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
     return loaded || (user?.instances && user.instances[0]) || '';
   });
   const [savedInstances, setSavedInstances] = useState<SavedInstance[]>(() => {
-    const loaded = localStorage.getItem('evolution_saved_instances');
+    const loaded = localStorage.getItem(`evolution_saved_instances_${user?.username || 'default'}`);
     if (loaded) { try { return JSON.parse(loaded); } catch(e) {} }
     return [];
   });
@@ -289,7 +289,7 @@ function AppV2() {
   };
 
   // Message State
-  const [message, setMessage] = useState(() => localStorage.getItem('evo_message') || '');
+  const [message, setMessage] = useState(() => localStorage.getItem(`evo_message_${user?.username || 'default'}`) || '');
   const [mediaAttachments, setMediaAttachments] = useState<MediaAttachment[]>([]);
   
   // Broadcast State
@@ -302,26 +302,26 @@ function AppV2() {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // Sync state to localStorage
-  useEffect(() => { localStorage.setItem('evo_message', message); }, [message]);
+  useEffect(() => { localStorage.setItem(`evo_message_${user?.username || 'default'}`, message); }, [message, user?.username]);
 
   // Handle instance changes
   useEffect(() => { 
-    localStorage.setItem('evo_selectedInstance', instanceName);
-    const loaded = localStorage.getItem(`evo_targetContacts_${instanceName}`);
+    localStorage.setItem(`evo_selectedInstance_${user?.username || 'default'}`, instanceName);
+    const loaded = localStorage.getItem(`evo_targetContacts_${user?.username || 'default'}_${instanceName}`);
     if (loaded) { try { setTargetContacts(JSON.parse(loaded)); } catch(e) { setTargetContacts([]); } }
     else { setTargetContacts([]); }
     // Clean up temporary states when instance changes
     setAllContacts([]);
     setSelectedListId('');
     setListName('');
-  }, [instanceName]);
+  }, [instanceName, user?.username]);
 
   // Save active target contacts per instance
   useEffect(() => { 
     if (instanceName) {
-      localStorage.setItem(`evo_targetContacts_${instanceName}`, JSON.stringify(targetContacts)); 
+      localStorage.setItem(`evo_targetContacts_${user?.username || 'default'}_${instanceName}`, JSON.stringify(targetContacts)); 
     }
-  }, [targetContacts, instanceName]);
+  }, [targetContacts, instanceName, user?.username]);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });

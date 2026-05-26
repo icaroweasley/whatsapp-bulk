@@ -68,6 +68,10 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
 
       if (!response.ok) {
         const errText = await response.text();
+        if (errText.includes('already in use')) {
+          startPolling(instanceName.trim());
+          return;
+        }
         throw new Error(`Erro ao criar instância: ${errText}`);
       }
 
