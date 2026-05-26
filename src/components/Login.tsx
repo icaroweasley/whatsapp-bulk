@@ -19,7 +19,8 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+    const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API_URL = rawUrl.replace(/\/$/, '').replace('163.176.37.93:3001', '163.176.37.93:8080');
     try {
       const response = await fetch(`/api-proxy/api/auth/login`, {
         method: 'POST',

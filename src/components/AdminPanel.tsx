@@ -14,7 +14,8 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+  const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = rawUrl.replace(/\/$/, '').replace('163.176.37.93:3001', '163.176.37.93:8080');
   
   // Form State
   const [isCreating, setIsCreating] = useState(false);

@@ -233,7 +233,8 @@ import { Settings } from 'lucide-react';
 
 function AppV2() {
   const { user, token, logout } = useAuth();
-  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+  const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = rawUrl.replace(/\/$/, '').replace('163.176.37.93:3001', '163.176.37.93:8080');
   
   // Navigation State
   const [currentScreen, setCurrentScreen] = useState<1 | 2 | 3>(1);
