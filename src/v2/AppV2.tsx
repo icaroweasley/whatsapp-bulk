@@ -356,10 +356,25 @@ function AppV2() {
       cleanBaseUrl = 'https://' + cleanBaseUrl;
     }
 
+    // 1. Fetch real instanceId for security filtering
+    let realInstanceId = '';
+    try {
+      const stateRes = await fetch(`/api-proxy/instance/connectionState/${targetInstance}`, {
+        method: 'GET',
+        headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl }
+      });
+      if (stateRes.ok) {
+        const stateData = await stateRes.json();
+        realInstanceId = stateData?.instance?.instanceId || stateData?.instance?.id || '';
+      }
+    } catch (e) {}
+
+    const payloadWhere = realInstanceId ? { instanceId: realInstanceId } : {};
+
     const endpointsToTry = [
-      { path: `/chat/findContacts/${targetInstance}`, method: 'POST', body: {} },
-      { path: `/v2/chat/findContacts/${targetInstance}`, method: 'POST', body: {} },
-      { path: `/contact/find/${targetInstance}`, method: 'POST', body: {} },
+      { path: `/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
+      { path: `/v2/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
+      { path: `/contact/find/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
       { path: `/v2/contact/fetchContacts/${targetInstance}`, method: 'GET' },
       { path: `/contact/fetchContacts/${targetInstance}`, method: 'GET' },
       { path: `/chat/fetchContacts/${targetInstance}`, method: 'GET' }
@@ -394,7 +409,13 @@ function AppV2() {
 
           const contactsList = Array.isArray(data) ? data : (data.contacts || data.data || []);
           
-          const formattedContacts: Contact[] = contactsList.map((c: any) => {
+          const formattedContacts: Contact[] = contactsList.filter((c: any) => {
+            // Strict security filter: if Evolution API leaked all contacts, drop those from other instances
+            if (realInstanceId && c.instanceId && c.instanceId !== realInstanceId) {
+                return false;
+            }
+            return true;
+          }).map((c: any) => {
             // Tática de caça: transforma o contato inteiro em texto e acha o número real (DDD + Numero)
             const cString = JSON.stringify(c);
             const match = cString.match(/\b(55\d{10,11})\b/);
