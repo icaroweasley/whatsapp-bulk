@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     // Copiamos os headers da requisição original
     const fetchHeaders = { ...req.headers };
     
-    // Removemos headers que podem conflitar com a requisição do Vercel para a Evolution API
+    // Removemos headers que podem conflitar com a requisição
     delete fetchHeaders['x-target-url'];
     delete fetchHeaders.host;
     delete fetchHeaders.origin;
@@ -47,6 +47,8 @@ export default async function handler(req, res) {
     delete fetchHeaders['x-vercel-id'];
     delete fetchHeaders['x-vercel-ip-country'];
     delete fetchHeaders['connection'];
+    delete fetchHeaders['content-length'];
+    delete fetchHeaders['accept-encoding'];
 
     // Vercel faz o parse automático do body se for JSON, então precisamos voltar para string
     let body = undefined;
@@ -82,6 +84,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Proxy Error:', error);
     Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
-    return res.status(500).json({ error: 'Internal Proxy Error', details: error.message });
+    return res.status(500).json({ 
+      error: `Proxy Error: ${error.message} (Target: ${targetUrlStr || 'unknown'})`, 
+      details: error.stack 
+    });
   }
 }
