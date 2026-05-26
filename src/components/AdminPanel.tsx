@@ -20,6 +20,12 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [newPassword, setNewPassword] = useState('');
   const [newInstances, setNewInstances] = useState('');
 
+  // Delete User Confirmation State
+  const [deletingUser, setDeletingUser] = useState<{ id: string, username: string } | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isDeletingLoading, setIsDeletingLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -76,23 +82,49 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const handleDeleteUser = async (id: string, username: string) => {
+  const handleDeleteUser = (id: string, username: string) => {
     if (username === 'karu') {
       alert("Você não pode excluir o administrador principal.");
       return;
     }
-    if (confirm(`Tem certeza que deseja excluir o cliente '${username}'?`)) {
-      try {
-        const res = await fetch(`http://localhost:3001/api/admin/users/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          fetchUsers();
-        }
-      } catch (e) {
-        alert("Erro ao deletar");
+    setDeletingUser({ id, username });
+    setConfirmPassword('');
+    setDeleteError('');
+  };
+
+  const submitDeleteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deletingUser) return;
+    if (!confirmPassword) {
+      setDeleteError("Por favor, digite sua senha.");
+      return;
+    }
+
+    setIsDeletingLoading(true);
+    setDeleteError('');
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/admin/users/${deletingUser.id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ adminPassword: confirmPassword })
+      });
+
+      if (res.ok) {
+        setDeletingUser(null);
+        setConfirmPassword('');
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        setDeleteError(data.error || "Senha incorreta ou erro ao excluir.");
       }
+    } catch (e) {
+      setDeleteError("Erro de conexão com o servidor.");
+    } finally {
+      setIsDeletingLoading(false);
     }
   };
 
@@ -248,6 +280,63 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         </div>
 
       </div>
+
+      {/* Sleek Password Confirmation Modal for Deleting User */}
+      {deletingUser && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="liquid-panel rounded-[2rem] p-8 border border-white/10 bg-black/60 max-w-md w-full shadow-2xl relative z-50">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2 text-red-400">
+              <Trash2 size={20} />
+              Confirmar Exclusão
+            </h3>
+            <p className="text-sm text-white/70 mb-6 leading-relaxed">
+              Você está prestes a excluir permanentemente o cliente <span className="font-semibold text-white">@{deletingUser.username}</span> e todas as suas listas.
+              <br />
+              <span className="text-xs text-white/50 block mt-2">Para confirmar, digite a sua senha de administrador:</span>
+            </p>
+
+            <form onSubmit={submitDeleteUser} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-all font-medium text-center tracking-widest text-lg"
+                  placeholder="••••••••"
+                  autoFocus
+                />
+                {deleteError && (
+                  <p className="text-xs text-red-400 mt-2 font-medium">{deleteError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  type="button"
+                  onClick={() => setDeletingUser(null)}
+                  disabled={isDeletingLoading}
+                  className="liquid-glass border border-white/10 text-white rounded-full px-5 py-3 text-sm font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDeletingLoading}
+                  className="bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-3 text-sm font-semibold transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDeletingLoading ? (
+                    <>
+                      <Loader2 className="animate-spin text-white" size={16} /> Excluindo...
+                    </>
+                  ) : (
+                    "Confirmar Exclusão"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

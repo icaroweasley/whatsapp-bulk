@@ -128,8 +128,24 @@ app.put('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
 app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    const { adminPassword } = req.body;
+
+    if (!adminPassword) {
+      return res.status(400).json({ error: 'Senha de confirmação necessária' });
+    }
+
+    const adminUser = await prisma.user.findUnique({ where: { username: 'karu' } });
+    if (!adminUser) {
+      return res.status(404).json({ error: 'Administrador não encontrado' });
+    }
+
+    const isValid = await bcrypt.compare(adminPassword, adminUser.password);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Senha de administrador incorreta!' });
+    }
+
     await prisma.user.delete({ where: { id } });
-    res.json({ message: 'Usuário excluído!' });
+    res.json({ message: 'Usuário excluído com sucesso!' });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao excluir usuário' });
   }
