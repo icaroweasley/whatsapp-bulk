@@ -371,97 +371,105 @@ function AppV2() {
 
     const payloadWhere = realInstanceId ? { instanceId: realInstanceId } : {};
 
-    const endpointsToTry = [
+    const endpointsContacts = [
       { path: `/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
-      { path: `/v2/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
-      { path: `/contact/find/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
-      { path: `/v2/contact/fetchContacts/${targetInstance}`, method: 'GET' },
-      { path: `/contact/fetchContacts/${targetInstance}`, method: 'GET' },
-      { path: `/chat/fetchContacts/${targetInstance}`, method: 'GET' }
+      { path: `/v2/contact/fetchContacts/${targetInstance}`, method: 'GET' }
+    ];
+
+    const endpointsChats = [
+      { path: `/chat/findChats/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
+      { path: `/v2/chat/findChats/${targetInstance}`, method: 'GET' }
     ];
 
     let success = false;
+    let mergedRawData: any[] = [];
 
-    for (const endpoint of endpointsToTry) {
-      try {
-        const fetchOptions: RequestInit = {
-          method: endpoint.method,
-          headers: {
-            ...getHeaders(),
-            'x-target-url': cleanBaseUrl
+    // Helper para tentar buscar de uma lista de endpoints (pega o primeiro que funcionar)
+    const tryFetch = async (endpoints: any[]) => {
+      for (const endpoint of endpoints) {
+        try {
+          const fetchOptions: RequestInit = {
+            method: endpoint.method,
+            headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl }
+          };
+          if (endpoint.method === 'POST') {
+            fetchOptions.body = JSON.stringify(endpoint.body || {});
           }
-        };
-
-        if (endpoint.method === 'POST') {
-          fetchOptions.body = JSON.stringify((endpoint as any).body || {});
-        }
-
-        const response = await fetch(`/api-proxy${endpoint.path}`, fetchOptions);
-        const textResponse = await response.text();
-
-        if (response.ok) {
-          let data;
-          try {
-             data = JSON.parse(textResponse);
-          } catch (err) {
-             continue;
+          const response = await fetch(`/api-proxy${endpoint.path}`, fetchOptions);
+          const textResponse = await response.text();
+          if (response.ok) {
+            try {
+              const data = JSON.parse(textResponse);
+              const list = Array.isArray(data) ? data : (data.contacts || data.chats || data.data || []);
+              if (list.length > 0) return list;
+            } catch (err) {}
           }
-
-          const contactsList = Array.isArray(data) ? data : (data.contacts || data.data || []);
-          
-          const formattedContacts: Contact[] = contactsList.filter((c: any) => {
-            // Strict security filter: if Evolution API leaked all contacts, drop those from other instances
-            if (realInstanceId && c.instanceId && c.instanceId !== realInstanceId) {
-                return false;
-            }
-            return true;
-          }).map((c: any) => {
-            // Tática de caça: transforma o contato inteiro em texto e acha o número real (DDD + Numero)
-            const cString = JSON.stringify(c);
-            const match = cString.match(/\b(55\d{10,11})\b/);
-            
-            let actualNumber = '';
-            let rawId = '';
-
-            if (match) {
-              // Achou um número válido do Brasil perdido em alguma variável!
-              actualNumber = match[1];
-              rawId = actualNumber + '@s.whatsapp.net';
-            } else {
-              // Fallback original
-              rawId = c.id || c.remoteJid || c.number || '';
-              actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
-              actualNumber = actualNumber.replace(/\D/g, '');
-              
-              if (typeof rawId === 'string' && !rawId.includes('@') && actualNumber.length >= 14 && !actualNumber.startsWith('55')) {
-                rawId = actualNumber + '@lid';
-              }
-            }
-            
-            return {
-              id: rawId,
-              pushName: c.pushName,
-              name: c.name,
-              number: actualNumber,
-              status: 'pending'
-            };
-          }).filter((c: Contact) => {
-            if (!c.number) return false;
-            const lowerId = String(c.id).toLowerCase();
-            // Remove grupos e listas de transmissão
-            if (lowerId.includes('g.us') || lowerId.includes('broadcast')) return false;
-            // Garante que tenha um número de telefone com tamanho mínimo aceitável
-            return c.number.length >= 8;
-          });
-
-          setAllContacts(formattedContacts);
-          setSelectedAllContacts(new Set());
-          success = true;
-          break;
-        }
-      } catch (error) {
-        // silently try next
+        } catch (error) {}
       }
+      return [];
+    };
+
+    // Busca contatos e chats simultaneamente
+    const [contactsData, chatsData] = await Promise.all([
+      tryFetch(endpointsContacts),
+      tryFetch(endpointsChats)
+    ]);
+
+    mergedRawData = [...contactsData, ...chatsData];
+
+    if (mergedRawData.length > 0) {
+      success = true;
+
+      const formattedContacts: Contact[] = mergedRawData.filter((c: any) => {
+        // Filtro estrito de instanceId
+        if (realInstanceId && c.instanceId && c.instanceId !== realInstanceId) return false;
+        
+        // Filtro estrito contra GRUPOS antes do parse
+        const cid = String(c.id || c.remoteJid || '').toLowerCase();
+        if (cid.includes('g.us') || cid.includes('broadcast')) return false;
+
+        return true;
+      }).map((c: any) => {
+        // Tática de caça: transforma o contato inteiro em texto e acha o número real
+        const cString = JSON.stringify(c);
+        const match = cString.match(/\b(55\d{10,11})\b/);
+        
+        let actualNumber = '';
+        let rawId = '';
+
+        if (match) {
+          actualNumber = match[1];
+          rawId = actualNumber + '@s.whatsapp.net';
+        } else {
+          rawId = c.id || c.remoteJid || c.number || '';
+          actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
+          actualNumber = actualNumber.replace(/\D/g, '');
+          
+          if (typeof rawId === 'string' && !rawId.includes('@') && actualNumber.length >= 14 && !actualNumber.startsWith('55')) {
+            rawId = actualNumber + '@lid';
+          }
+        }
+        
+        return {
+          id: rawId,
+          pushName: c.pushName,
+          name: c.name,
+          number: actualNumber,
+          status: 'pending'
+        };
+      }).filter((c: Contact) => {
+        if (!c.number) return false;
+        const lowerId = String(c.id).toLowerCase();
+        if (lowerId.includes('g.us') || lowerId.includes('broadcast')) return false;
+        return c.number.length >= 8;
+      });
+
+      // Remove duplicatas
+      const uniqueContactsMap = new Map<string, Contact>();
+      formattedContacts.forEach(c => uniqueContactsMap.set(c.id, c));
+      
+      setAllContacts(Array.from(uniqueContactsMap.values()));
+      setSelectedAllContacts(new Set());
     }
     
     if (!success) {
