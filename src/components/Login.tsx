@@ -19,11 +19,14 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`/api-proxy/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-target-url': API_URL
+        },
         body: JSON.stringify({ username, password })
       });
 

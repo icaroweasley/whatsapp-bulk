@@ -14,7 +14,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
   
   // Form State
   const [isCreating, setIsCreating] = useState(false);
@@ -34,8 +34,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`/api-proxy/api/admin/users`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'x-target-url': API_URL
+        }
       });
       if (res.ok) {
         setUsers(await res.json());
@@ -55,11 +58,12 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/users`, {
+      const res = await fetch(`/api-proxy/api/admin/users`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
+          'x-target-url': API_URL
         },
         body: JSON.stringify({ 
           username: newUsername, 
@@ -106,11 +110,12 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     setDeleteError('');
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/users/${deletingUser.id}`, {
+      const res = await fetch(`/api-proxy/api/admin/users/${deletingUser.id}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
+          'x-target-url': API_URL
         },
         body: JSON.stringify({ adminPassword: confirmPassword })
       });
