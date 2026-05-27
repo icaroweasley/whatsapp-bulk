@@ -34,6 +34,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [isDeletingInstanceLoading, setIsDeletingInstanceLoading] = useState(false);
   const [deleteInstanceError, setDeleteInstanceError] = useState('');
 
+  // Add Instance State
+  const [addingInstanceTo, setAddingInstanceTo] = useState<{ id: string, username: string, currentInstances: string } | null>(null);
+  const [newInstanceName, setNewInstanceName] = useState('');
+  const [isAddingInstance, setIsAddingInstance] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -319,7 +324,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                       {u.username === 'karu' && <span className="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Admin</span>}
                     </td>
                     <td className="p-6">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 items-center">
                         {u.instances.split(',').map(inst => inst.trim()).filter(Boolean).map((inst, i) => (
                           <div key={i} className="flex items-center bg-white/10 border border-white/10 rounded-full pr-1 overflow-hidden">
                             <span className="text-white/80 text-xs px-3 py-1">
@@ -334,6 +339,13 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                             </button>
                           </div>
                         ))}
+                        <button
+                          onClick={() => { setAddingInstanceTo({ id: u.id, username: u.username, currentInstances: u.instances }); setNewInstanceName(''); }}
+                          className="w-6 h-6 flex items-center justify-center bg-white/5 border border-white/10 text-white/50 rounded-full hover:bg-white/10 hover:text-white transition-colors ml-1"
+                          title="Adicionar Instância"
+                        >
+                          <Plus size={12} />
+                        </button>
                       </div>
                     </td>
                     <td className="p-6 text-white/50 text-sm">
@@ -460,6 +472,84 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 Confirmar Exclusão
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Instance Modal */}
+      {addingInstanceTo && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="liquid-panel rounded-[2rem] p-8 border border-white/10 bg-black/60 max-w-md w-full shadow-2xl relative z-50">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <Plus size={20} className="text-purple-400" />
+              Adicionar Instância
+            </h3>
+            <div className="text-sm text-white/70 mb-6 leading-relaxed">
+              Adicionando nova instância para o usuário <strong className="text-white">{addingInstanceTo.username}</strong>.
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newInstanceName) return;
+              setIsAddingInstance(true);
+              try {
+                const updatedInstancesArray = addingInstanceTo.currentInstances
+                  .split(',')
+                  .map(i => i.trim())
+                  .filter(Boolean);
+                updatedInstancesArray.push(newInstanceName.trim());
+                
+                const newInstancesStr = updatedInstancesArray.join(',');
+
+                const res = await fetch(`/api-proxy/api/admin/users/${addingInstanceTo.id}`, {
+                  method: 'PUT',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                    'x-target-url': API_URL
+                  },
+                  body: JSON.stringify({ instances: newInstancesStr, username: addingInstanceTo.username })
+                });
+
+                if (res.ok) {
+                  setAddingInstanceTo(null);
+                  fetchUsers();
+                } else {
+                  alert("Erro ao adicionar instância.");
+                }
+              } catch (e) {
+                alert("Erro de conexão.");
+              } finally {
+                setIsAddingInstance(false);
+              }
+            }}>
+              <input
+                type="text"
+                value={newInstanceName}
+                onChange={e => setNewInstanceName(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium mb-6"
+                placeholder="Nome da nova instância..."
+                autoFocus
+              />
+
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setAddingInstanceTo(null)}
+                  className="liquid-glass border border-white/10 text-white rounded-full px-6 py-3 font-semibold transition-colors hover:bg-white/10"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isAddingInstance || !newInstanceName}
+                  className="bg-white text-black rounded-full px-8 py-3 flex items-center gap-2 font-semibold hover:bg-white/90 transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] disabled:opacity-50"
+                >
+                  {isAddingInstance ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  Adicionar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
