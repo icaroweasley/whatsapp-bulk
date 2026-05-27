@@ -165,17 +165,31 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           method: 'DELETE',
           headers: { 'apikey': apiKey, 'x-target-url': cleanBaseUrl }
         });
-      } catch(e) {} // ignore logout errors
+        // IMPORTANTE: Aguarda 2.5 segundos para dar tempo do WhatsApp processar o logout no celular
+        // antes de destruirmos a instância no servidor.
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      } catch(e) {
+        console.error("Erro ao deslogar", e);
+      }
 
       const evoRes = await fetch(`/api-proxy/instance/delete/${deletingInstance.instanceName}`, {
         method: 'DELETE',
         headers: { 'apikey': apiKey, 'x-target-url': cleanBaseUrl }
       });
 
-      // Ignore 404 because the instance might already be deleted in Evolution
       if (!evoRes.ok && evoRes.status !== 404) {
         console.error("Erro ao deletar da Evolution API", await evoRes.text());
       }
+
+      // Limpa também do localStorage do próprio Admin caso seja uma instância dele
+      try {
+        const savedStr = localStorage.getItem('evolution_saved_instances');
+        if (savedStr) {
+          const saved = JSON.parse(savedStr);
+          const filtered = saved.filter((i: any) => i.instanceName !== deletingInstance.instanceName);
+          localStorage.setItem('evolution_saved_instances', JSON.stringify(filtered));
+        }
+      } catch(e) {}
 
       // 2. Remove from local database
       const updatedInstancesArray = deletingInstance.currentInstances
