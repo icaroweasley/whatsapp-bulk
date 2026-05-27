@@ -29,6 +29,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  // Delete Instance State
+  const [deletingInstance, setDeletingInstance] = useState<{ userId: string, username: string, instanceName: string, currentInstances: string } | null>(null);
+  const [isDeletingInstanceLoading, setIsDeletingInstanceLoading] = useState(false);
+  const [deleteInstanceError, setDeleteInstanceError] = useState('');
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -133,6 +138,69 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       setDeleteError("Erro de conexão com o servidor.");
     } finally {
       setIsDeletingLoading(false);
+    }
+  };
+
+  const submitDeleteInstance = async () => {
+    if (!deletingInstance) return;
+    setIsDeletingInstanceLoading(true);
+    setDeleteInstanceError('');
+
+    try {
+      const baseUrl = import.meta.env.VITE_EVOLUTION_URL || '';
+      let cleanBaseUrl = baseUrl.trim().replace(/\/$/, '');
+      if (!cleanBaseUrl.startsWith('http://') && !cleanBaseUrl.startsWith('https://')) {
+        cleanBaseUrl = 'https://' + cleanBaseUrl;
+      }
+      const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
+
+      // 1. Delete from Evolution API (logout and remove from db)
+      try {
+        await fetch(`/api-proxy/instance/logout/${deletingInstance.instanceName}`, {
+          method: 'DELETE',
+          headers: { 'apikey': apiKey, 'x-target-url': cleanBaseUrl }
+        });
+      } catch(e) {} // ignore logout errors
+
+      const evoRes = await fetch(`/api-proxy/instance/delete/${deletingInstance.instanceName}`, {
+        method: 'DELETE',
+        headers: { 'apikey': apiKey, 'x-target-url': cleanBaseUrl }
+      });
+
+      // Ignore 404 because the instance might already be deleted in Evolution
+      if (!evoRes.ok && evoRes.status !== 404) {
+        console.error("Erro ao deletar da Evolution API", await evoRes.text());
+      }
+
+      // 2. Remove from local database
+      const updatedInstancesArray = deletingInstance.currentInstances
+        .split(',')
+        .map(i => i.trim())
+        .filter(i => i && i !== deletingInstance.instanceName);
+      
+      const newInstancesStr = updatedInstancesArray.join(',');
+
+      const res = await fetch(`/api-proxy/api/admin/users/${deletingInstance.userId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'x-target-url': API_URL
+        },
+        body: JSON.stringify({ instances: newInstancesStr, username: deletingInstance.username })
+      });
+
+      if (res.ok) {
+        setDeletingInstance(null);
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        setDeleteInstanceError(data.error || "Erro ao atualizar usuário no banco local.");
+      }
+    } catch (e) {
+      setDeleteInstanceError("Erro de conexão com o servidor.");
+    } finally {
+      setIsDeletingInstanceLoading(false);
     }
   };
 
@@ -253,9 +321,18 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                     <td className="p-6">
                       <div className="flex flex-wrap gap-2">
                         {u.instances.split(',').map(inst => inst.trim()).filter(Boolean).map((inst, i) => (
-                          <span key={i} className="bg-white/10 border border-white/10 text-white/80 text-xs px-3 py-1 rounded-full">
-                            {inst}
-                          </span>
+                          <div key={i} className="flex items-center bg-white/10 border border-white/10 rounded-full pr-1 overflow-hidden">
+                            <span className="text-white/80 text-xs px-3 py-1">
+                              {inst}
+                            </span>
+                            <button
+                              onClick={() => setDeletingInstance({ userId: u.id, username: u.username, instanceName: inst, currentInstances: u.instances })}
+                              className="w-5 h-5 flex items-center justify-center bg-red-500/20 text-red-300 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                              title="Apagar Instância (Nuvem e Painel)"
+                            >
+                              <Trash2 size={10} />
+                            </button>
+                          </div>
                         ))}
                       </div>
                     </td>
@@ -345,6 +422,48 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       )}
+
+      {/* Instance Deletion Confirmation Modal */}
+      {deletingInstance && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="liquid-panel rounded-[2rem] p-8 border border-white/10 bg-black/60 max-w-md w-full shadow-2xl relative z-50">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2 text-red-400">
+              <Trash2 size={20} />
+              Apagar Instância
+            </h3>
+            <div className="text-sm text-white/70 mb-6 leading-relaxed">
+              Você está prestes a excluir a instância <strong className="text-white">"{deletingInstance.instanceName}"</strong> do usuário <strong className="text-white">{deletingInstance.username}</strong>.
+              <br /><br />
+              Esta ação irá desconectar o WhatsApp na Evolution API e apagar os dados da nuvem. Deseja continuar?
+            </div>
+
+            {deleteInstanceError && (
+              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 text-red-300 text-sm rounded-xl">
+                {deleteInstanceError}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button 
+                type="button"
+                onClick={() => setDeletingInstance(null)}
+                className="liquid-glass border border-white/10 text-white rounded-full px-6 py-3 font-semibold transition-colors hover:bg-white/10"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={submitDeleteInstance}
+                disabled={isDeletingInstanceLoading}
+                className="bg-red-500 text-white rounded-full px-8 py-3 flex items-center gap-2 font-semibold hover:bg-red-600 transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] disabled:opacity-50"
+              >
+                {isDeletingInstanceLoading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                Confirmar Exclusão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
