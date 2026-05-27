@@ -203,14 +203,14 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           
           <div>
             <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Sua Instância Atribuída</label>
-            {instances.length > 1 ? (
+            {instances.length > 0 ? (
               <div className="relative">
                 <select
                   value={instanceName}
                   onChange={(e) => setInstanceName(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg appearance-none cursor-pointer"
                 >
-                  {instances.map(inst => (
+                  {instances.map((inst: string) => (
                     <option key={inst} value={inst} className="bg-black text-white">{inst}</option>
                   ))}
                 </select>
@@ -222,8 +222,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
               <input
                 type="text"
                 value={instanceName}
-                readOnly
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white/50 focus:outline-none font-medium text-lg cursor-not-allowed"
+                onChange={(e) => setInstanceName(e.target.value)}
+                placeholder="Digite o nome da nova instância..."
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg"
               />
             )}
           </div>
