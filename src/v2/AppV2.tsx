@@ -455,7 +455,7 @@ function AppV2() {
           pushName: c.pushName,
           name: c.name,
           number: actualNumber,
-          status: 'pending'
+          status: 'pending' as 'pending'
         };
       }).filter((c: Contact) => {
         if (!c.number) return false;
