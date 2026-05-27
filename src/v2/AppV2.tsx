@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useDeferredValue, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import ConnectionManager from './ConnectionManager';
-import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download } from 'lucide-react';
+import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2 } from 'lucide-react';
 
 interface Contact {
   id: string;
