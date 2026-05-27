@@ -910,43 +910,45 @@ function AppV2() {
       <div className="relative z-10 flex flex-col min-h-screen p-4 lg:p-8 max-w-[1920px] mx-auto">
         
         {/* Header / Nav */}
-        <header className="flex items-center justify-between mb-10 px-2 lg:px-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-              <MessageSquare size={18} className="text-black" fill="currentColor" />
+        <header className="flex flex-wrap items-center justify-between gap-y-4 mb-8 md:mb-10 px-2 lg:px-4">
+          <div className="flex items-center gap-3 order-1">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
+              <MessageSquare size={16} className="text-black md:w-[18px] md:h-[18px]" fill="currentColor" />
             </div>
-            <span className="font-semibold text-2xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
-          </div>
-          
-          {/* Steps Indicator */}
-          <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/10 rounded-full px-2 py-1.5 shadow-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[55vw] md:max-w-none">
-            <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
-            <div className="hidden md:block w-4 h-[1px] bg-white/10"></div>
-            <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
-            <div className="hidden md:block w-4 h-[1px] bg-white/10"></div>
-            <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
+            <span className="font-semibold text-xl md:text-2xl tracking-tighter text-white whitespace-nowrap">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
           </div>
           
           {/* User & Logout */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4 order-2 md:order-3">
             {user?.username === 'karu' && (
               <button
                 onClick={() => setShowAdmin(true)}
-                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2 transition-colors"
+                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-semibold flex items-center gap-1.5 md:gap-2 transition-colors shrink-0"
               >
-                <Settings size={14} /> Admin
+                <Settings size={14} className="w-3 h-3 md:w-3.5 md:h-3.5" /> Admin
               </button>
             )}
-            <div className="hidden md:block text-right">
+            <div className="hidden md:block text-right shrink-0">
               <p className="text-sm font-semibold">{user?.username}</p>
               <p className="text-xs text-white/50">{instanceName}</p>
             </div>
             <button 
               onClick={logout}
-              className="liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
+              className="liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-semibold transition-colors shrink-0"
             >
               Sair
             </button>
+          </div>
+
+          {/* Steps Indicator */}
+          <div className="flex justify-center w-full md:w-auto order-3 md:order-2 shrink-0">
+            <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/10 rounded-full px-1.5 py-1.5 md:px-2 shadow-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full md:w-auto justify-between md:justify-center">
+              <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
+              <div className="hidden md:block w-4 h-[1px] bg-white/10 shrink-0"></div>
+              <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
+              <div className="hidden md:block w-4 h-[1px] bg-white/10 shrink-0"></div>
+              <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
+            </div>
           </div>
         </header>
 
