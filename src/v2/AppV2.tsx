@@ -1006,11 +1006,17 @@ function AppV2() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
-                {allContacts.length === 0 ? (
+                {isLoadingContacts ? (
+                  <div className="h-full flex flex-col items-center justify-center text-white/50 text-center p-6">
+                    <Loader2 size={32} className="mb-4 opacity-50 animate-spin text-purple-400" />
+                    <p className="text-sm font-medium">Buscando contatos...</p>
+                    <p className="text-xs mt-1 opacity-70">Aguarde enquanto sincronizamos sua agenda e chats.</p>
+                  </div>
+                ) : allContacts.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-white/50 text-center p-6">
                     <Users size={32} className="mb-4 opacity-50" />
                     <p className="text-sm">Nenhum contato carregado.</p>
-                    <p className="text-xs mt-1">Clique em "Buscar da API" para sincronizar.</p>
+                    <p className="text-xs mt-1">Clique em "Buscar da API" para tentar novamente.</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">

@@ -51,6 +51,30 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
     try {
       const endpoint = `/instance/create`;
       const targetUrl = cleanUrl(baseUrl);
+
+      // Check current connection state
+      try {
+        const checkRes = await fetch(`/api-proxy/instance/connectionState/${instanceName.trim()}`, {
+          method: 'GET',
+          headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData?.instance?.state === 'open' || checkData?.instance?.state === 'connecting') {
+            const confirmOverwrite = window.confirm('⚠️ Esta instância já está conectada ou conectando ao WhatsApp!\n\nTem certeza que deseja gerar um novo QR Code e refazer a conexão?\nIsso vai desconectar o aparelho atual.');
+            if (!confirmOverwrite) {
+              setStatus('idle');
+              if (checkData?.instance?.state === 'open') {
+                setStatus('connected');
+                if (onConnected) onConnected(instanceName.trim());
+              }
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        // ignore check errors and proceed to create
+      }
       
       const response = await fetch(`/api-proxy${endpoint}`, {
         method: 'POST',
