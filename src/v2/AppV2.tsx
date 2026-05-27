@@ -238,6 +238,7 @@ function AppV2() {
   
   // Navigation State
   const [currentScreen, setCurrentScreen] = useState<1 | 2 | 3>(1);
+  const [mobileTab, setMobileTab] = useState<'source' | 'target'>('source');
   const [showAdmin, setShowAdmin] = useState(false);
 
   // Evolution API Config
@@ -918,12 +919,12 @@ function AppV2() {
           </div>
           
           {/* Steps Indicator */}
-          <div className="hidden md:flex items-center gap-2 liquid-glass border border-white/10 rounded-full px-2 py-1.5 shadow-lg">
-            <button onClick={() => setCurrentScreen(1)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
-            <div className="w-4 h-[1px] bg-white/10"></div>
-            <button onClick={() => nextScreen(2)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
-            <div className="w-4 h-[1px] bg-white/10"></div>
-            <button onClick={() => nextScreen(3)} className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
+          <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/10 rounded-full px-2 py-1.5 shadow-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[55vw] md:max-w-none">
+            <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
+            <div className="hidden md:block w-4 h-[1px] bg-white/10"></div>
+            <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
+            <div className="hidden md:block w-4 h-[1px] bg-white/10"></div>
+            <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
           </div>
           
           {/* User & Logout */}
@@ -972,10 +973,28 @@ function AppV2() {
 
         {/* SCREEN 2: LIST MANAGEMENT */}
         {currentScreen === 2 && (
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full max-h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col w-full max-h-[calc(100vh-140px)]">
             
-            {/* Left Panel: Fetched Contacts */}
-            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] flex flex-col p-2 overflow-hidden">
+            {/* Mobile Tabs for Step 2 */}
+            <div className="flex lg:hidden w-full mb-4 liquid-glass rounded-xl p-1 shrink-0">
+              <button 
+                onClick={() => setMobileTab('source')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${mobileTab === 'source' ? 'bg-white text-black' : 'text-white/50'}`}
+              >
+                Buscar Contatos
+              </button>
+              <button 
+                onClick={() => setMobileTab('target')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${mobileTab === 'target' ? 'bg-white text-black' : 'text-white/50'}`}
+              >
+                Lista Alvo ({targetContacts.length})
+              </button>
+            </div>
+
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
+              
+              {/* Left Panel: Fetched Contacts */}
+              <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h2 className="text-xl font-medium text-white tracking-tight">Contatos da Instância</h2>
@@ -1060,7 +1079,7 @@ function AppV2() {
             </div>
 
             {/* Right Panel: Target List */}
-            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] flex flex-col p-2 overflow-hidden relative">
+            <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="p-5 flex flex-col gap-5">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-medium text-white tracking-tight">Lista de Disparo (Alvo)</h2>
@@ -1181,6 +1200,7 @@ function AppV2() {
                   <ArrowRight size={16} />
                 </button>
               </div>
+            </div>
             </div>
           </div>
         )}
