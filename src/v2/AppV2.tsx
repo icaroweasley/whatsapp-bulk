@@ -465,9 +465,20 @@ function AppV2() {
         return c.number.length >= 8;
       });
 
-      // Remove duplicatas
+      // Remove duplicatas e mescla os dados para não perder nomes (ex: Chat sem 'name' sobrescrevendo Contact com 'name')
       const uniqueContactsMap = new Map<string, Contact>();
-      formattedContacts.forEach(c => uniqueContactsMap.set(c.id, c));
+      formattedContacts.forEach(c => {
+        if (uniqueContactsMap.has(c.id)) {
+          const existing = uniqueContactsMap.get(c.id)!;
+          uniqueContactsMap.set(c.id, {
+            ...existing,
+            name: existing.name || c.name,
+            pushName: existing.pushName || c.pushName
+          });
+        } else {
+          uniqueContactsMap.set(c.id, c);
+        }
+      });
       
       setAllContacts(Array.from(uniqueContactsMap.values()));
       setSelectedAllContacts(new Set());
