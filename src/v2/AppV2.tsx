@@ -470,12 +470,11 @@ function AppV2() {
       
       setAllContacts(Array.from(uniqueContactsMap.values()));
       setSelectedAllContacts(new Set());
+    } else {
+      setAllContacts([]);
+      setSelectedAllContacts(new Set());
     }
     
-    if (!success) {
-      alert('Falha ao buscar contatos. Verifique os dados da API.');
-    }
-
     setIsLoadingContacts(false);
   };
 
