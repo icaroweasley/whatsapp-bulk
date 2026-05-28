@@ -55,13 +55,15 @@ export default async function handler(req, res) {
       expiresIn: '7d',
     });
 
+    const instancesArray = user.instances ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : [];
+
     Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
     return res.status(200).json({
       token,
       user: {
         id: user.id,
         username: user.username,
-        instances: user.instances,
+        instances: instancesArray,
         planStatus: user.planStatus
       }
     });

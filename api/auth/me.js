@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const instancesArray = user.instances.split(',').map(s => s.trim()).filter(Boolean);
+    const instancesArray = user.instances ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : [];
 
     Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
     return res.status(200).json({ 
