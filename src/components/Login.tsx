@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { LogIn, Loader2, MessageSquare } from 'lucide-react';
+import { LogIn, Loader2, MessageSquare, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -14,6 +16,11 @@ export default function Login() {
     e.preventDefault();
     if (!username || !password) {
       setError('Preencha todos os campos.');
+      return;
+    }
+
+    if (isRegistering && password !== confirmPassword) {
+      setError('As senhas não coincidem.');
       return;
     }
 
@@ -89,14 +96,38 @@ export default function Login() {
             
             <div>
               <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all font-medium text-lg placeholder-white/20"
-                placeholder="Sua senha"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-5 pr-12 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all font-medium text-lg placeholder-white/20"
+                  placeholder="Sua senha"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
+
+            {isRegistering && (
+              <div>
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Confirmar Senha</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-5 pr-12 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all font-medium text-lg placeholder-white/20"
+                    placeholder="Repita sua senha"
+                  />
+                </div>
+              </div>
+            )}
 
             <button 
               type="submit"
