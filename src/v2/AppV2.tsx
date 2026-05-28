@@ -347,7 +347,8 @@ function AppV2() {
       'Content-Type': 'application/json',
       'apikey': apiKey,
       'ngrok-skip-browser-warning': 'true',
-      'Bypass-Tunnel-Reminder': 'true'
+      'Bypass-Tunnel-Reminder': 'true',
+      'Authorization': `Bearer ${token}`
     };
   };
 
