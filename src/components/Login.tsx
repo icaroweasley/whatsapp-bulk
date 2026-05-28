@@ -7,6 +7,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,14 +20,12 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const API_URL = rawUrl.replace(/\/$/, '').replace('163.176.37.93:3001', '163.176.37.93:8080');
     try {
-      const response = await fetch(`/api-proxy/api/auth/login`, {
+      const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'x-target-url': API_URL
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ username, password })
       });
@@ -34,7 +33,7 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao fazer login');
+        throw new Error(data.error || 'Erro na operação');
       }
 
       login(data.token, data.user);
@@ -62,9 +61,9 @@ export default function Login() {
 
       <div className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Header / Logo */}
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-            <MessageSquare size={22} className="text-black" fill="currentColor" />
+        <div className="flex flex-col items-center gap-2 mb-10">
+          <div className="w-28 h-28 flex items-center justify-center drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+            <img src="/logo.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain" />
           </div>
           <span className="font-semibold text-3xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
         </div>
@@ -107,16 +106,25 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 size={20} className="animate-spin text-black" />
-                  Conectando...
+                  {isRegistering ? 'Criando conta...' : 'Conectando...'}
                 </>
               ) : (
                 <>
                   <LogIn size={20} className="text-black" />
-                  Acessar Painel
+                  {isRegistering ? 'Criar Conta' : 'Acessar Painel'}
                 </>
               )}
             </button>
           </form>
+
+          <div className="text-center mt-6">
+            <button 
+              onClick={() => setIsRegistering(!isRegistering)}
+              className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+            >
+              {isRegistering ? 'Já tem uma conta? Faça login' : 'Ainda não tem conta? Crie uma aqui'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

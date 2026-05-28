@@ -1,3 +1,8 @@
+import { prisma } from './lib/prisma.js';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_charlie_key_2026';
+
 export const config = {
   api: {
     bodyParser: {
@@ -29,6 +34,60 @@ export default async function handler(req, res) {
 
   // Removemos o '/api-proxy' da URL original para descobrir o endpoint final (ex: /chat/sendText/...)
   const pathPart = req.url.replace('/api-proxy', '') || '/';
+  
+  // --- VERIFICAÇÃO DE COTA (SaaS) ---
+  const isSendingMessage = pathPart.includes('/message/sendText') || pathPart.includes('/message/sendMedia');
+  let userId = null;
+
+  if (isSendingMessage) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+      return res.status(401).json({ error: 'Token de autorização não fornecido para disparo.' });
+    }
+
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      userId = decoded.id;
+      
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user || user.planStatus !== 'active') {
+        Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+        return res.status(403).json({ error: 'Assinatura inativa. Pague o plano para fazer disparos.' });
+      }
+
+      // Checa a cota diária
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Zera as horas para pegar apenas o dia
+
+      const usage = await prisma.dailyUsage.upsert({
+        where: {
+          userId_date: {
+            userId: user.id,
+            date: today
+          }
+        },
+        update: {},
+        create: {
+          userId: user.id,
+          date: today,
+          messageCount: 0
+        }
+      });
+
+      if (usage.messageCount >= 1000) {
+        Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+        return res.status(403).json({ error: 'Limite diário de 1.000 mensagens atingido.' });
+      }
+
+    } catch (e) {
+      Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+      return res.status(401).json({ error: 'Token inválido.' });
+    }
+  }
+  // ----------------------------------
   
   try {
     const targetUrl = new URL(targetUrlStr + pathPart);
@@ -70,6 +129,24 @@ export default async function handler(req, res) {
 
     // Pega a resposta como texto bruto
     const data = await response.text();
+
+    // Se o envio foi sucesso, incrementa a cota
+    if (isSendingMessage && response.ok && userId) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      await prisma.dailyUsage.update({
+        where: {
+          userId_date: {
+            userId: userId,
+            date: today
+          }
+        },
+        data: {
+          messageCount: { increment: 1 }
+        }
+      });
+    }
 
     // Injeta os headers de CORS na resposta final
     Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));

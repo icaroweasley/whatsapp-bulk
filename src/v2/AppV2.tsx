@@ -274,7 +274,7 @@ function AppV2() {
 
   const fetchLists = async () => {
     try {
-      const res = await fetch(`/api-proxy/api/lists`, {
+      const res = await fetch(`/api/lists`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'x-target-url': API_URL
@@ -292,6 +292,7 @@ function AppV2() {
   // Message State
   const [message, setMessage] = useState(() => localStorage.getItem(`evo_message_${user?.username || 'default'}`) || '');
   const [mediaAttachments, setMediaAttachments] = useState<MediaAttachment[]>([]);
+  const [textPosition, setTextPosition] = useState<'before' | 'after' | 'caption'>('after');
   
   // Broadcast State
   const [isSending, setIsSending] = useState(false);
@@ -304,6 +305,13 @@ function AppV2() {
 
   // Sync state to localStorage
   useEffect(() => { localStorage.setItem(`evo_message_${user?.username || 'default'}`, message); }, [message, user?.username]);
+
+  // Reset textPosition if user uploaded multiple images but had caption selected
+  useEffect(() => {
+    if (mediaAttachments.length > 1 && textPosition === 'caption') {
+      setTextPosition('after');
+    }
+  }, [mediaAttachments.length, textPosition]);
 
   // Handle instance changes
   useEffect(() => { 
@@ -574,7 +582,7 @@ function AppV2() {
 
     try {
       const isNew = !selectedListId;
-      const res = await fetch(`/api-proxy/api/lists`, {
+      const res = await fetch(`/api/lists`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -622,7 +630,7 @@ function AppV2() {
   const deleteList = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta lista permanentemente?")) {
       try {
-        const res = await fetch(`/api-proxy/api/lists/${id}`, {
+        const res = await fetch(`/api/lists/${id}`, {
           method: 'DELETE',
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -651,26 +659,87 @@ function AppV2() {
   // --- Media & Broadcast ---
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      const maxSize = 5 * 1024 * 1024; // 5MB limit
-      Array.from(files).forEach(file => {
-        if (file.size > maxSize) {
-          alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). O limite da Evolution API para envio em Base64 é de no máximo 5MB. Por favor, use um arquivo menor.`);
-          return;
-        }
-        
+    if (!files || files.length === 0) return;
+
+    let filesArray = Array.from(files);
+    
+    // Limit to 3 files total
+    const availableSlots = Math.max(0, 3 - mediaAttachments.length);
+    if (filesArray.length > availableSlots) {
+      alert(`Você só pode anexar no máximo 3 mídias.`);
+      filesArray = filesArray.slice(0, availableSlots);
+    }
+    
+    filesArray.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        // Resize Image Client-Side
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setMediaAttachments(prev => [...prev, {
-            id: Date.now().toString() + Math.random().toString(),
-            base64: reader.result as string,
-            name: file.name,
-            type: file.type
-          }]);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1280;
+            const MAX_HEIGHT = 1280;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // 85% quality, very lightweight
+            
+            setMediaAttachments(current => {
+              if (current.length >= 3) return current;
+              return [...current, {
+                id: Date.now().toString() + Math.random().toString(),
+                base64: dataUrl,
+                name: file.name.replace(/\.[^/.]+$/, "") + "_otimizada.jpg",
+                type: 'image/jpeg'
+              }];
+            });
+          };
+          img.src = event.target?.result as string;
         };
         reader.readAsDataURL(file);
-      });
-    }
+      } else {
+        // Videos or other files
+        const maxSize = 5 * 1024 * 1024; // 5MB limit
+        if (file.size > maxSize) {
+          alert(`O arquivo "${file.name}" é muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). O limite para vídeos é 5MB.`);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMediaAttachments(current => {
+            if (current.length >= 3) return current;
+            return [...current, {
+              id: Date.now().toString() + Math.random().toString(),
+              base64: reader.result as string,
+              name: file.name,
+              type: file.type
+            }];
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Clear input so same file can be selected again
+    e.target.value = '';
   };
 
   const removeMedia = (id: string) => {
@@ -680,6 +749,7 @@ function AppV2() {
   const insertNamePlaceholder = () => {
     setMessage(prev => prev + '{nome}');
   };
+
 
   const startBroadcast = async () => {
     if (targetContacts.length === 0) {
@@ -756,82 +826,80 @@ function AppV2() {
 
         let contactSuccess = false;
         let contactErrorMsg = '';
-        
-        if (mediaAttachments.length > 0) {
-           for (let mIndex = 0; mIndex < mediaAttachments.length; mIndex++) {
-              const attachment = mediaAttachments[mIndex];
-              const endpoint = `/message/sendMedia/${instanceName}`;
-              let finalMedia = attachment.base64;
-              if (finalMedia.includes('base64,')) {
-                  finalMedia = finalMedia.split('base64,')[1];
-              }
 
-              const body = {
-                number: targetJid,
-                mediatype: attachment.type.startsWith('video') ? "video" : "image",
-                mimetype: attachment.type || "image/jpeg",
-                fileName: attachment.name || "media",
-                caption: mIndex === 0 ? personalizedMessage : "",
-                media: finalMedia
-              };
-
-              const response = await fetch(`/api-proxy${endpoint}`, {
-                method: 'POST',
-                headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
-                body: JSON.stringify(body)
-              });
-
-              const textResponse = await response.text();
-              
-              if (!response.ok) {
-                 contactErrorMsg = response.status.toString();
-                 try {
-                    const parsedErr = JSON.parse(textResponse);
-                    contactErrorMsg += ' - ' + (parsedErr.message || JSON.stringify(parsedErr));
-                 } catch(e) {
-                    contactErrorMsg += ' - ' + textResponse.substring(0, 60);
-                 }
-                 break;
-              } else {
-                 try {
-                    JSON.parse(textResponse);
-                    contactSuccess = true;
-                 } catch (e) {
-                    contactErrorMsg = "Erro de JSON na resposta";
-                    contactSuccess = false;
-                    break;
-                 }
-              }
-
-              if (mIndex < mediaAttachments.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 3000));
-              }
-           }
-        } else {
+        const sendText = async (textToSend: string) => {
            const endpoint = `/message/sendText/${instanceName}`;
-           const body = { number: targetJid, text: personalizedMessage };
            const response = await fetch(`/api-proxy${endpoint}`, {
               method: 'POST',
               headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
-              body: JSON.stringify(body)
+              body: JSON.stringify({ number: targetJid, text: textToSend })
            });
            const textResponse = await response.text();
-           if (response.ok) {
-               try {
-                  JSON.parse(textResponse);
-                  contactSuccess = true;
-               } catch (e) {
-                  contactErrorMsg = "Erro de JSON na resposta";
-               }
-           } else {
-               contactErrorMsg = response.status.toString();
-               try {
-                  const parsedErr = JSON.parse(textResponse);
-                  contactErrorMsg += ' - ' + (parsedErr.message || JSON.stringify(parsedErr));
-               } catch(e) {
-                  contactErrorMsg += ' - ' + textResponse.substring(0, 60);
-               }
+           if (!response.ok) {
+              let err = response.status.toString();
+              try { err += ' - ' + JSON.parse(textResponse).message; } catch(e) {}
+              throw new Error(err);
            }
+        };
+
+        try {
+          if (mediaAttachments.length > 0) {
+             if (textPosition === 'before' && personalizedMessage) {
+                 await sendText(personalizedMessage);
+                 await new Promise(resolve => setTimeout(resolve, 2000));
+             }
+
+             let finalMediaAttachments = mediaAttachments;
+
+             // Disparo sequencial para as imagens
+             for (let mIndex = 0; mIndex < finalMediaAttachments.length; mIndex++) {
+                const attachment = finalMediaAttachments[mIndex];
+                const endpoint = `/message/sendMedia/${instanceName}`;
+                let finalMedia = attachment.base64;
+                if (finalMedia.includes('base64,')) {
+                    finalMedia = finalMedia.split('base64,')[1];
+                }
+
+                const body = {
+                  number: targetJid,
+                  mediatype: attachment.type.startsWith('video') ? "video" : "image",
+                  mimetype: attachment.type || "image/jpeg",
+                  fileName: attachment.name || "media",
+                  caption: (textPosition === 'caption' && mIndex === 0) ? personalizedMessage : "",
+                  media: finalMedia
+                };
+
+                const response = await fetch(`/api-proxy${endpoint}`, {
+                  method: 'POST',
+                  headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
+                  body: JSON.stringify(body)
+                });
+
+                const textResponse = await response.text();
+                
+                if (!response.ok) {
+                   let err = response.status.toString();
+                   try { err += ' - ' + JSON.parse(textResponse).message; } catch(e) {}
+                   throw new Error(err);
+                }
+
+                if (mIndex < finalMediaAttachments.length - 1) {
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+             }
+
+             if (textPosition === 'after' && personalizedMessage) {
+                 await new Promise(resolve => setTimeout(resolve, 2000));
+                 await sendText(personalizedMessage);
+             }
+             contactSuccess = true;
+          } else {
+             await sendText(personalizedMessage);
+             contactSuccess = true;
+          }
+        } catch (err: any) {
+           contactErrorMsg = err.message || "Erro desconhecido";
+           contactSuccess = false;
         }
 
         if (contactSuccess && !contactErrorMsg) {
@@ -922,9 +990,9 @@ function AppV2() {
         
         {/* Header / Nav */}
         <header className="flex flex-wrap items-center justify-between gap-y-4 mb-8 md:mb-10 px-2 lg:px-4">
-          <div className="flex items-center gap-3 order-1">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
-              <MessageSquare size={16} className="text-black md:w-[18px] md:h-[18px]" fill="currentColor" />
+          <div className="flex items-center gap-1 md:gap-2 order-1">
+            <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 flex items-center justify-center -ml-2 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+              <img src="/logo.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-semibold text-xl md:text-2xl tracking-tighter text-white whitespace-nowrap">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
           </div>
@@ -939,9 +1007,23 @@ function AppV2() {
                 <Settings size={14} className="w-3 h-3 md:w-3.5 md:h-3.5" /> Admin
               </button>
             )}
-            <div className="hidden md:block text-right shrink-0">
-              <p className="text-sm font-semibold">{user?.username}</p>
-              <p className="text-xs text-white/50">{instanceName}</p>
+            <div className="hidden md:flex flex-col items-end shrink-0 gap-1">
+              <div className="flex flex-col items-end leading-tight">
+                <p className="text-sm font-semibold">{user?.username}</p>
+                <p className="text-[11px] text-white/50">{instanceName}</p>
+              </div>
+              
+              {user?.planExpiresAt && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wide uppercase ${user.mpCustomerId ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
+                    {user.mpCustomerId ? 'Plano Pago' : 'Trial Grátis'}
+                  </span>
+                  <span className="text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse"></span>
+                    Vence: {new Date(user.planExpiresAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
             </div>
             <button 
               onClick={logout}
@@ -1007,7 +1089,9 @@ function AppV2() {
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
               
               {/* Left Panel: Fetched Contacts */}
-              <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
+              <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+                <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h2 className="text-xl font-medium text-white tracking-tight">Contatos da Instância</h2>
@@ -1089,10 +1173,13 @@ function AppV2() {
                   <ArrowRight size={16} />
                 </button>
               </div>
+              </div>
             </div>
 
             {/* Right Panel: Target List */}
-            <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+              <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col gap-5">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-medium text-white tracking-tight">Lista de Disparo (Alvo)</h2>
@@ -1213,6 +1300,7 @@ function AppV2() {
                   <ArrowRight size={16} />
                 </button>
               </div>
+              </div>
             </div>
             </div>
           </div>
@@ -1220,12 +1308,14 @@ function AppV2() {
 
         {/* SCREEN 3: BROADCAST */}
         {currentScreen === 3 && (
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full max-h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] p-6 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar">
+            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
-              <button onClick={() => setCurrentScreen(2)} className="flex items-center gap-2 text-white/50 hover:text-white text-xs mb-8 transition-colors w-max font-medium uppercase tracking-wider">
+              <div className="relative z-10 flex flex-col h-full w-full">
+                <button onClick={() => setCurrentScreen(2)} className="flex items-center gap-2 text-white/50 hover:text-white text-xs mb-8 transition-colors w-max font-medium uppercase tracking-wider">
                 <ArrowLeft size={14} /> Voltar
               </button>
 
@@ -1255,7 +1345,7 @@ function AppV2() {
 
                 {/* Media Upload */}
                 <div>
-                  <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-3">Mídia (Opcional)</label>
+                  <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-3">Imagens até 3 (Opcional)</label>
                   
                   {mediaAttachments.length > 0 && (
                     <div className="space-y-2 mb-3">
@@ -1286,12 +1376,105 @@ function AppV2() {
                     </label>
                   </div>
                 </div>
+                
+                {/* Text Position Options */}
+                {mediaAttachments.length > 0 && message && (
+                  <div className="mt-6 space-y-3">
+                    <label className="block text-xs font-medium text-white/60 uppercase tracking-wider">Como enviar o texto?</label>
+                    <div className="grid grid-cols-1 gap-2">
+
+                      {mediaAttachments.length === 1 && (
+                        <label className={`liquid-glass rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors ${textPosition === 'caption' ? 'bg-white/10 border-white/20' : 'hover:bg-white/5 border-white/5 border'}`}>
+                          <input type="radio" name="textPosition" checked={textPosition === 'caption'} onChange={() => setTextPosition('caption')} className="accent-green-500 w-4 h-4" />
+                          <span className="text-sm text-white/90">Texto colado na imagem (Legenda)</span>
+                        </label>
+                      )}
+                      <label className={`liquid-glass rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors ${textPosition === 'after' ? 'bg-white/10 border-white/20' : 'hover:bg-white/5 border-white/5 border'}`}>
+                        <input type="radio" name="textPosition" checked={textPosition === 'after'} onChange={() => setTextPosition('after')} className="accent-green-500 w-4 h-4" />
+                        <span className="text-sm text-white/90">Imagens primeiro, Texto depois</span>
+                      </label>
+                      <label className={`liquid-glass rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors ${textPosition === 'before' ? 'bg-white/10 border-white/20' : 'hover:bg-white/5 border-white/5 border'}`}>
+                        <input type="radio" name="textPosition" checked={textPosition === 'before'} onChange={() => setTextPosition('before')} className="accent-green-500 w-4 h-4" />
+                        <span className="text-sm text-white/90">Texto primeiro, Imagens depois</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
               </div>
             </div>
 
             {/* Right Panel: Summary & Console */}
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
               
+              {/* Preview Card */}
+              <div className="liquid-panel rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+                
+                <div className="relative z-10 flex flex-col h-full w-full">
+                  <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4 text-center">Preview da Mensagem</h3>
+                
+                <div className="relative rounded-2xl overflow-hidden min-h-[250px] border border-white/5 shadow-inner bg-[#0b141a]">
+                  <div className="absolute inset-0 bg-repeat opacity-40 pointer-events-none" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: '400px'}}></div>
+                  
+                  <div className="relative z-10 p-4 flex flex-col gap-2 h-full">
+                    {/* TEXT BEFORE MEDIA */}
+                    {mediaAttachments.length > 0 && textPosition === 'before' && message && (
+                      <div className="self-end bg-[#005c4b] text-[#e9edef] p-2 px-3 rounded-lg rounded-tr-none max-w-[85%] shadow-md">
+                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">{message.replace(/{nome}/gi, 'João da Silva')}</p>
+                      </div>
+                    )}
+
+                    {/* CAPTION MEDIA */}
+                    {mediaAttachments.length === 1 && textPosition === 'caption' && mediaAttachments.map((media, index) => (
+                      <div key={'prev-media-cap'} className="self-end bg-[#005c4b] text-[#e9edef] p-1.5 rounded-lg rounded-tr-none max-w-[85%] shadow-md">
+                        {media.type.startsWith('image/') ? (
+                           <img src={media.base64} alt="preview" className="rounded-md max-w-full object-cover mb-1" style={{maxHeight: '220px'}} />
+                        ) : (
+                           <div className="bg-black/30 w-full h-24 flex flex-col gap-2 items-center justify-center rounded-md mb-1 px-4 text-center text-white/60"><Play size={24} className="opacity-50"/><span className="text-[10px]">{media.name}</span></div>
+                        )}
+                        {message && (
+                          <p className="text-[14px] leading-relaxed whitespace-pre-wrap px-1 pb-1 pt-1 break-words">{message.replace(/{nome}/gi, 'João da Silva')}</p>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* REGULAR MEDIA */}
+                    {mediaAttachments.length > 0 && textPosition !== 'caption' && mediaAttachments.map((media, index) => (
+                      <div key={'prev-media-'+index} className="self-end bg-[#005c4b] text-[#e9edef] p-1.5 rounded-lg rounded-tr-none max-w-[85%] shadow-md">
+                        {media.type.startsWith('image/') ? (
+                           <img src={media.base64} alt="preview" className="rounded-md max-w-full object-cover mb-1" style={{maxHeight: '220px'}} />
+                        ) : (
+                           <div className="bg-black/30 w-full h-24 flex flex-col gap-2 items-center justify-center rounded-md mb-1 px-4 text-center text-white/60"><Play size={24} className="opacity-50"/><span className="text-[10px]">{media.name}</span></div>
+                        )}
+                      </div>
+                    ))}
+
+                  {/* TEXT AFTER MEDIA */}
+                  {mediaAttachments.length > 0 && textPosition === 'after' && message && (
+                    <div className="relative z-10 self-end bg-[#005c4b] text-[#e9edef] p-2 px-3 rounded-lg rounded-tr-none max-w-[85%] shadow-md">
+                      <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">{message.replace(/{nome}/gi, 'João da Silva')}</p>
+                    </div>
+                  )}
+
+                  {/* TEXT ONLY (No Media) */}
+                  {mediaAttachments.length === 0 && message && (
+                    <div className="relative z-10 self-end bg-[#005c4b] text-[#e9edef] p-2 px-3 rounded-lg rounded-tr-none max-w-[85%] shadow-md">
+                      <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">{message.replace(/{nome}/gi, 'João da Silva')}</p>
+                    </div>
+                  )}
+
+                  {/* EMPTY STATE */}
+                  {!message && mediaAttachments.length === 0 && (
+                     <div className="relative z-10 m-auto bg-black/40 text-white/50 px-4 py-2 rounded-full text-xs backdrop-blur-md border border-white/10">
+                        A prévia aparecerá aqui
+                     </div>
+                  )}
+                  </div>
+                </div>
+                </div>
+              </div>
+
               {/* Summary Card */}
               <div className="liquid-panel rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>

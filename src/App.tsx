@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
+import Paywall from './components/Paywall';
 import AppV2 from './v2/AppV2';
 
 function App() {
@@ -19,7 +20,12 @@ function App() {
     return <Login />;
   }
 
-  // Se estiver logado, mostra o painel
+  // Se estiver logado mas o plano for inativo, mostra o paywall
+  if (user.planStatus !== 'active') {
+    return <Paywall />;
+  }
+
+  // Se estiver logado e ativo, mostra o painel
   return <AppV2 />;
 }
 

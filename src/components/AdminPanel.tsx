@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Users, Trash2, Plus, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Users, Trash2, Plus, ArrowLeft, Save, Loader2, Settings } from 'lucide-react';
 
 interface UserItem {
   id: string;
   username: string;
   instances: string;
   createdAt: string;
+  planStatus: string;
+  planExpiresAt: string | null;
+  customPrice: number | null;
+  mpCustomerId?: string | null;
 }
 
 export default function AdminPanel({ onClose }: { onClose: () => void }) {
@@ -39,13 +43,20 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [newInstanceName, setNewInstanceName] = useState('');
   const [isAddingInstance, setIsAddingInstance] = useState(false);
 
+  // Edit Plan State
+  const [editingPlanFor, setEditingPlanFor] = useState<UserItem | null>(null);
+  const [editPlanStatus, setEditPlanStatus] = useState('');
+  const [editPlanExpiresAt, setEditPlanExpiresAt] = useState('');
+  const [editCustomPrice, setEditCustomPrice] = useState('');
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`/api-proxy/api/admin/users`, {
+      const res = await fetch(`/api/admin/users`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'x-target-url': API_URL
@@ -69,7 +80,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
 
     try {
-      const res = await fetch(`/api-proxy/api/admin/users`, {
+      const res = await fetch(`/api/admin/users`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -121,7 +132,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     setDeleteError('');
 
     try {
-      const res = await fetch(`/api-proxy/api/admin/users/${deletingUser.id}`, {
+      const res = await fetch(`/api/admin/users/${deletingUser.id}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -199,7 +210,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       
       const newInstancesStr = updatedInstancesArray.join(',');
 
-      const res = await fetch(`/api-proxy/api/admin/users/${deletingInstance.userId}`, {
+      const res = await fetch(`/api/admin/users/${deletingInstance.userId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -322,24 +333,55 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
               <thead>
                 <tr className="border-b border-white/10 bg-black/20">
                   <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider">Usuário</th>
+                  <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider">Assinatura</th>
                   <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider">Instâncias Liberadas</th>
                   <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider">Data de Criação</th>
                   <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
-                  <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                {[...users].sort((a, b) => a.username === 'karu' ? -1 : b.username === 'karu' ? 1 : a.username.localeCompare(b.username)).map((u) => (
+                  <tr key={u.id} className={`transition-colors ${u.username === 'karu' ? 'border-b-4 border-white/10 bg-white/5' : 'border-b border-white/5 hover:bg-white/5'}`}>
                     <td className="p-6 font-medium flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${u.username === 'karu' ? 'bg-amber-500/20 text-amber-300' : 'bg-white/10'}`}>
                         {u.username.charAt(0).toUpperCase()}
                       </div>
                       {u.username}
-                      {u.username === 'karu' && <span className="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Admin</span>}
+                      {u.username === 'karu' && <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold shadow-[0_0_10px_rgba(245,158,11,0.2)]">Owner</span>}
+                    </td>
+                    <td className="p-6">
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-1 rounded font-semibold ${u.planStatus === 'active' || u.username === 'karu' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {u.planStatus === 'active' || u.username === 'karu' ? 'ATIVO' : 'INATIVO'}
+                          </span>
+                          {u.username === 'karu' ? (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_5px_rgba(245,158,11,0.2)]">
+                              Vitalício
+                            </span>
+                          ) : (
+                            (u.planStatus === 'active' || u.planExpiresAt) && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${u.mpCustomerId ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
+                                {u.mpCustomerId ? 'Pago' : 'Trial'}
+                              </span>
+                            )
+                          )}
+                        </div>
+                        {u.planExpiresAt && u.username !== 'karu' && (
+                          <span className="text-[10px] text-white/40">
+                            Vence: {new Date(u.planExpiresAt).toLocaleDateString()}
+                          </span>
+                        )}
+                        {u.customPrice !== null && u.username !== 'karu' && (
+                          <span className="text-[10px] text-yellow-400/80 font-medium">
+                            R$ {u.customPrice} fixo
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-6">
                       <div className="flex flex-wrap gap-2 items-center">
-                        {u.instances.split(',').map(inst => inst.trim()).filter(Boolean).map((inst, i) => (
+                        {(u.instances || '').split(',').map(inst => inst.trim()).filter(Boolean).map((inst, i) => (
                           <div key={i} className="flex items-center bg-white/10 border border-white/10 rounded-full pr-1 overflow-hidden">
                             <span className="text-white/80 text-xs px-3 py-1">
                               {inst}
@@ -365,11 +407,23 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                     <td className="p-6 text-white/50 text-sm">
                       {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="p-6 text-right">
+                    <td className="p-6 text-right flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => {
+                          setEditingPlanFor(u);
+                          setEditPlanStatus(u.planStatus);
+                          setEditPlanExpiresAt(u.planExpiresAt ? new Date(u.planExpiresAt).toISOString().split('T')[0] : '');
+                          setEditCustomPrice(u.customPrice ? u.customPrice.toString() : '');
+                        }}
+                        className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center hover:bg-blue-500/20 transition-colors"
+                        title="Editar Assinatura/Valores"
+                      >
+                        <Settings size={16} />
+                      </button>
                       {u.username !== 'karu' ? (
                         <button 
                           onClick={() => handleDeleteUser(u.id, u.username)}
-                          className="w-8 h-8 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors ml-auto"
+                          className="w-8 h-8 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors"
                           title="Excluir Cliente"
                         >
                           <Trash2 size={16} />
@@ -515,7 +569,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 
                 const newInstancesStr = updatedInstancesArray.join(',');
 
-                const res = await fetch(`/api-proxy/api/admin/users/${addingInstanceTo.id}`, {
+                const res = await fetch(`/api/admin/users/${addingInstanceTo.id}`, {
                   method: 'PUT',
                   headers: { 
                     'Content-Type': 'application/json',
@@ -561,6 +615,108 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 >
                   {isAddingInstance ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                   Adicionar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Plan Modal */}
+      {editingPlanFor && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="liquid-panel rounded-[2rem] p-8 border border-white/10 bg-black/60 max-w-md w-full shadow-2xl relative z-50">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <Settings size={20} className="text-blue-400" />
+              Editar Assinatura e Preço
+            </h3>
+            <div className="text-sm text-white/70 mb-6 leading-relaxed">
+              Configurações para o cliente <strong className="text-white">{editingPlanFor.username}</strong>.
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setIsEditingPlan(true);
+              try {
+                const res = await fetch(`/api/admin/users/${editingPlanFor.id}`, {
+                  method: 'PUT',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ 
+                    username: editingPlanFor.username,
+                    instances: editingPlanFor.instances,
+                    planStatus: editPlanStatus,
+                    planExpiresAt: editPlanExpiresAt ? editPlanExpiresAt : null,
+                    customPrice: editCustomPrice ? parseFloat(editCustomPrice) : null
+                  })
+                });
+
+                if (res.ok) {
+                  setEditingPlanFor(null);
+                  fetchUsers();
+                } else {
+                  alert("Erro ao editar plano.");
+                }
+              } catch (e) {
+                alert("Erro de conexão.");
+              } finally {
+                setIsEditingPlan(false);
+              }
+            }}>
+              
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Status da Assinatura</label>
+                <select 
+                  value={editPlanStatus} 
+                  onChange={(e) => setEditPlanStatus(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium appearance-none"
+                >
+                  <option value="active">Ativo (Pode Disparar)</option>
+                  <option value="inactive">Inativo (Bloqueado/Paywall)</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Vencimento (Opcional)</label>
+                <input
+                  type="date"
+                  value={editPlanExpiresAt}
+                  onChange={e => setEditPlanExpiresAt(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
+                />
+                <p className="text-xs text-white/40 mt-1 ml-1">Você pode estender o vencimento manualmente (Ex: Trial de 7 dias).</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Preço Fixo Mensal (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editCustomPrice}
+                  onChange={e => setEditCustomPrice(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
+                  placeholder="Ex: 50.00 (Deixe em branco para 100)"
+                />
+                <p className="text-xs text-white/40 mt-1 ml-1">Se preenchido, será este o valor cobrado no Mercado Pago.</p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingPlanFor(null)}
+                  className="liquid-glass border border-white/10 text-white rounded-full px-6 py-3 font-semibold transition-colors hover:bg-white/10"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isEditingPlan}
+                  className="bg-white text-black rounded-full px-8 py-3 flex items-center gap-2 font-semibold hover:bg-white/90 transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] disabled:opacity-50"
+                >
+                  {isEditingPlan ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  Salvar Configurações
                 </button>
               </div>
             </form>

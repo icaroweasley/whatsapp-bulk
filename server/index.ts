@@ -3,6 +3,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,6 +12,10 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_charlie_key_2026';
+
+const mpClient = new MercadoPagoConfig({ 
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '' 
+});
 
 app.use(cors());
 app.use(express.json());
@@ -59,8 +64,46 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ token, user: { id: user.id, username: user.username, instances: instancesArray } });
+    res.json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
   } catch (error) {
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Register
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Preencha usuário e senha' });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { username } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Usuário já existe' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        instances: `${username}_instance`,
+        planStatus: 'inactive'
+      }
+    });
+
+    const instancesArray = [user.instances];
+    const token = jwt.sign(
+      { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice } });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
@@ -69,7 +112,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, username: true, instances: true, createdAt: true }
+      select: { id: true, username: true, instances: true, createdAt: true, planStatus: true, planExpiresAt: true, customPrice: true, mpCustomerId: true }
     });
     res.json(users);
   } catch (error) {
@@ -106,19 +149,22 @@ app.post('/api/admin/users', authenticateAdmin, async (req, res) => {
 app.put('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, password, instances } = req.body;
+    const { username, password, instances, planStatus, planExpiresAt, customPrice } = req.body;
     
     const data: any = { username, instances };
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     }
+    if (planStatus !== undefined) data.planStatus = planStatus;
+    if (planExpiresAt !== undefined) data.planExpiresAt = planExpiresAt ? new Date(planExpiresAt) : null;
+    if (customPrice !== undefined) data.customPrice = customPrice ? parseFloat(customPrice) : null;
 
     const user = await prisma.user.update({
       where: { id },
       data
     });
 
-    res.json({ message: 'Usuário atualizado!', user: { id: user.id, username: user.username, instances: user.instances } });
+    res.json({ message: 'Usuário atualizado!', user: { id: user.id, username: user.username, instances: user.instances, planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, customPrice: user.customPrice } });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
@@ -227,10 +273,111 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res: any) => {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
     
-    const instancesArray = user.instances.split(',').map(s => s.trim()).filter(Boolean);
-    res.json({ user: { id: user.id, username: user.username, instances: instancesArray } });
+    // Auto-deactivate if plan is expired
+    if (user.planExpiresAt && new Date(user.planExpiresAt) < new Date() && user.planStatus === 'active') {
+      await prisma.user.update({ where: { id: user.id }, data: { planStatus: 'inactive' } });
+      user.planStatus = 'inactive';
+    }
+
+    const instancesArray = (user.instances || '').split(',').map(s => s.trim()).filter(Boolean);
+    res.json({ user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Mercado Pago: Checkout
+app.post('/api/payments/checkout', authenticateToken, async (req: any, res: any) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const preference = new Preference(mpClient);
+    
+    // Configura a URL de redirecionamento (substitua pela sua URL em produção)
+    let baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+    
+    // Mercado Pago exige HTTPS para back_urls. Se for localhost, mockamos.
+    if (baseUrl.includes('localhost')) {
+      baseUrl = 'https://google.com';
+    }
+
+    const price = user.customPrice !== null ? user.customPrice : 100.00;
+
+    const result = await preference.create({
+      body: {
+        items: [
+          {
+            id: 'plano_mensal',
+            title: 'Assinatura Mensal - Evolution Broadcast',
+            quantity: 1,
+            unit_price: price,
+            currency_id: 'BRL',
+          }
+        ],
+        external_reference: user.id, // O ID do usuário para sabermos quem pagou no webhook
+        back_urls: {
+          success: `${baseUrl}/?payment=success`,
+          failure: `${baseUrl}/?payment=failure`,
+          pending: `${baseUrl}/?payment=pending`,
+        },
+        auto_return: 'approved',
+      }
+    });
+
+    res.json({ init_point: result.init_point });
+  } catch (error) {
+    console.error('Erro no checkout MP:', error);
+    res.status(500).json({ error: 'Erro ao gerar pagamento' });
+  }
+});
+
+// Mercado Pago: Webhook
+app.post('/api/webhooks/mercadopago', async (req, res) => {
+  try {
+    const { action, data } = req.body;
+    
+    // O MercadoPago envia várias notificações. A que importa é payment.created ou payment.updated
+    // Em Produção, você faria uma busca (fetch) pelo ID do pagamento usando a API do MP para garantir
+    // que o status é realmente 'approved'. Para simplificar, vou assumir um fluxo básico onde
+    // se o pagamento chegou e o status no JSON for 'approved', nós ativamos.
+    // Idealmente você valida isso!
+    
+    if (req.body.type === 'payment' || req.query.topic === 'payment') {
+      const paymentId = req.body?.data?.id || req.query.id;
+      
+      // Buscar os detalhes reais do pagamento (Obrigatório por segurança)
+      const fetchResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` }
+      });
+      
+      const paymentData = await fetchResponse.json();
+
+      if (paymentData.status === 'approved') {
+        const userId = paymentData.external_reference;
+        
+        if (userId) {
+          // Aprova a assinatura por 30 dias
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 30);
+
+          await prisma.user.update({
+            where: { id: userId },
+            data: { 
+              planStatus: 'active',
+              planExpiresAt: expiresAt,
+              mpCustomerId: paymentData.payer?.id?.toString()
+            }
+          });
+          console.log(`[Webhook] Assinatura ativada para o usuário ${userId}`);
+        }
+      }
+    }
+
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Erro no Webhook MP:', error);
+    res.status(500).send('Erro interno');
   }
 });
 

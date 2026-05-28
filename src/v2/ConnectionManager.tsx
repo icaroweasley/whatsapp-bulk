@@ -177,7 +177,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
 
   if (status === 'connected') {
     return (
-      <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6 w-full h-full">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 border border-emerald-500/30">
             <CheckCircle2 size={28} />
@@ -210,12 +212,15 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             Desconectar
           </button>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 w-full space-y-6">
+    <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 w-full space-y-6 relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+      <div className="relative z-10 flex flex-col w-full space-y-6 h-full">
       
       {status === 'idle' || status === 'error' ? (
         <div className="space-y-6">
@@ -294,6 +299,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

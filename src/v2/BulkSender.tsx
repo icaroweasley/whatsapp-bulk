@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Square, Users, Settings, MessageSquare } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Contact {
   id: string;
@@ -27,6 +28,7 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
   const [isSending, setIsSending] = useState(false);
   const [isPausedUI, setIsPausedUI] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const { token } = useAuth();
   
   // Anti-ban configs
   const [minDelay, setMinDelay] = useState(15);
@@ -57,7 +59,8 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
     return {
       'Content-Type': 'application/json',
       'apikey': apiKey,
-      'x-target-url': cleanUrl(baseUrl)
+      'x-target-url': cleanUrl(baseUrl),
+      'Authorization': `Bearer ${token}`
     };
   };
 

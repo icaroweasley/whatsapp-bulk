@@ -4,6 +4,10 @@ interface User {
   id: string;
   username: string;
   instances: string[];
+  planStatus?: string;
+  customPrice?: number | null;
+  planExpiresAt?: string | null;
+  mpCustomerId?: string | null;
 }
 
 interface AuthContextType {
@@ -11,6 +15,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -19,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   token: null,
   login: () => {},
   logout: () => {},
+  refreshUser: async () => {},
   isLoading: true,
 });
 
@@ -59,8 +65,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('evo_selectedInstance');
   };
 
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/auth/me`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        localStorage.setItem('evo_user', JSON.stringify(data.user));
+      }
+    } catch (e) {
+      console.error('Erro ao recarregar usuário:', e);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
