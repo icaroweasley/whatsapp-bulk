@@ -982,68 +982,111 @@ function AppV2() {
         <div className="absolute inset-0 bg-black/40 backdrop-blur-3xl"></div>
       </div>
 
-      {/* Main Content Wrapper */}
-      <div className="relative z-10 flex flex-col min-h-screen p-4 lg:p-8 max-w-[1920px] mx-auto">
+      {/* Main Content Wrapper - ChatPulse Desktop App Style */}
+      <div className="relative z-10 flex h-screen p-4 lg:p-6 w-full max-w-[1600px] mx-auto items-center justify-center">
         
-        {/* Header / Nav */}
-        <header className="flex flex-wrap items-center justify-between gap-y-4 mb-8 md:mb-10 px-2 lg:px-4">
-          <div className="flex items-center gap-1 md:gap-2 order-1">
-            <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 flex items-center justify-center -ml-2 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-              <img src="/logo.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain" />
-            </div>
-            <span className="font-semibold text-xl md:text-2xl tracking-tighter text-white whitespace-nowrap">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
-          </div>
+        {/* App Window Shell */}
+        <div className="w-full h-full lg:max-h-[900px] liquid-panel rounded-[2rem] flex overflow-hidden border border-white/10 shadow-2xl relative">
           
-          {/* User & Logout */}
-          <div className="flex items-center gap-2 md:gap-4 order-2 md:order-3">
-            {user?.username === 'karu' && (
-              <button
-                onClick={() => setShowAdmin(true)}
-                className="bg-white/10 hover:bg-white/20 text-white rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-semibold flex items-center gap-1.5 md:gap-2 transition-colors shrink-0"
+          {/* Left Sidebar */}
+          <aside className="w-20 md:w-24 shrink-0 flex flex-col items-center py-6 border-r border-white/5 relative z-20 bg-black/20">
+            {/* Sidebar Gradient Glow */}
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-500/10 via-transparent to-blue-500/10 opacity-50 pointer-events-none"></div>
+            
+            {/* Logo */}
+            <div className="w-12 h-12 mb-10 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+            </div>
+
+            {/* Nav Icons */}
+            <nav className="flex-1 w-full flex flex-col items-center gap-6 relative z-10">
+              <button 
+                onClick={() => setCurrentScreen(1)} 
+                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                title="1. Conexão"
               >
-                <Settings size={14} className="w-3 h-3 md:w-3.5 md:h-3.5" /> Admin
+                {currentScreen === 1 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-emerald-400 rounded-r-md shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
               </button>
-            )}
-            <div className="hidden md:flex flex-col items-end shrink-0 gap-1">
-              <div className="flex flex-col items-end leading-tight">
-                <p className="text-sm font-semibold">{user?.username}</p>
-                <p className="text-[11px] text-white/50">{instanceName}</p>
+
+              <button 
+                onClick={() => nextScreen(2)} 
+                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 2 ? 'bg-white/10 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                title="2. Listas"
+              >
+                {currentScreen === 2 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-purple-400 rounded-r-md shadow-[0_0_10px_rgba(168,85,247,0.8)]"></div>}
+                <Users size={22} />
+              </button>
+
+              <button 
+                onClick={() => nextScreen(3)} 
+                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 3 ? 'bg-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                title="3. Disparo"
+              >
+                {currentScreen === 3 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-cyan-400 rounded-r-md shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>}
+                <MessageSquare size={22} />
+              </button>
+            </nav>
+
+            {/* Bottom Sidebar Actions */}
+            <div className="flex flex-col gap-4 mt-auto relative z-10 w-full items-center">
+              {user?.username === 'karu' && (
+                <button
+                  onClick={() => setShowAdmin(true)}
+                  className="w-10 h-10 rounded-full bg-white/5 text-white/50 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all"
+                  title="Admin"
+                >
+                  <Settings size={18} />
+                </button>
+              )}
+              <button 
+                onClick={logout}
+                className="w-10 h-10 rounded-full bg-red-500/10 text-red-400 hover:text-red-300 hover:bg-red-500/20 flex items-center justify-center transition-all"
+                title="Sair"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              </button>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+            
+            {/* Top Bar */}
+            <header className="h-20 border-b border-white/5 shrink-0 flex items-center justify-between px-8 bg-black/10">
+              <div className="flex items-center gap-4">
+                <span className="font-semibold text-xl tracking-tight text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+                <div className="w-px h-5 bg-white/10 mx-2 hidden sm:block"></div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{instanceName ? 'CONEXÃO ATIVA' : 'DESCONECTADO'}</span>
+                  <span className="text-white/30">|</span>
+                  <span className="text-xs font-medium text-white/70">{instanceName ? instanceName : 'Aguardando Dispositivo'}</span>
+                </div>
               </div>
               
-              {user?.planExpiresAt && (
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wide uppercase ${user.mpCustomerId ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
-                    {user.mpCustomerId ? 'Plano Pago' : 'Trial Grátis'}
-                  </span>
-                  <span className="text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse"></span>
-                    Vence: {new Date(user.planExpiresAt).toLocaleDateString('pt-BR')}
-                  </span>
+              <div className="flex items-center gap-4">
+                {user?.planExpiresAt && (
+                  <div className="hidden lg:flex items-center gap-1.5 mr-2">
+                    <span className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                      Vence: {new Date(user.planExpiresAt).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden">
+                     {user?.username?.substring(0, 2)}
+                  </div>
+                  <span className="text-sm font-semibold pr-2 hidden sm:block">{user?.username}</span>
                 </div>
-              )}
-            </div>
-            <button 
-              onClick={logout}
-              className="liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-semibold transition-colors shrink-0"
-            >
-              Sair
-            </button>
-          </div>
+              </div>
+            </header>
 
-          {/* Steps Indicator */}
-          <div className="flex justify-center w-full md:w-auto order-3 md:order-2 shrink-0">
-            <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/5 rounded-full px-1.5 py-1.5 md:px-2 shadow-lg overflow-x-auto w-full md:w-auto justify-between md:justify-center bg-black/40">
-              <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 1 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>1. Conexão</button>
-              <div className="hidden md:block w-4 h-[1px] bg-white/5 shrink-0"></div>
-              <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 2 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>2. Listas</button>
-              <div className="hidden md:block w-4 h-[1px] bg-white/5 shrink-0"></div>
-              <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 3 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>3. Disparo</button>
-            </div>
-          </div>
-        </header>
+            {/* Inner Content Scroller */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
 
         {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
-
+        
         {/* SCREEN 1: CONNECTION */}
         {currentScreen === 1 && (
           <div className="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto">
@@ -1552,6 +1595,9 @@ function AppV2() {
           </div>
         )}
 
+            </div>
+          </div>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
