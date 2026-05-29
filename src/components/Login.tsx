@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { LogIn, Loader2, MessageSquare, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Login() {
+interface LoginProps {
+  onBack?: () => void;
+}
+
+export default function Login({ onBack }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -76,6 +80,15 @@ export default function Login() {
         </div>
 
         <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 w-full space-y-6 relative overflow-hidden backdrop-blur-2xl border border-white/10 bg-white/5 shadow-2xl">
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="absolute top-6 left-6 text-white/40 hover:text-white text-sm flex items-center gap-2 transition-colors font-medium"
+            >
+              ← Voltar
+            </button>
+          )}
+
           {error && (
             <div className="p-4 liquid-glass border border-red-500/30 bg-red-500/10 text-red-200 rounded-2xl text-sm">
               {error}

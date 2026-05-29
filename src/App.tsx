@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Paywall from './components/Paywall';
 import AppV2 from './v2/AppV2';
 
 function App() {
   const { user, isLoading } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
 
   if (isLoading) {
     return (
@@ -15,9 +17,12 @@ function App() {
     );
   }
 
-  // Se não estiver logado, mostra a tela de login
+  // Se não estiver logado, mostra Landing Page ou Login
   if (!user) {
-    return <Login />;
+    if (showLogin) {
+      return <Login onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
   }
 
   // Se estiver logado mas o plano for inativo, mostra o paywall

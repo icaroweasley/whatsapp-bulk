@@ -14,7 +14,7 @@ interface UserItem {
 }
 
 export default function AdminPanel({ onClose }: { onClose: () => void }) {
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -223,6 +223,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       if (res.ok) {
         setDeletingInstance(null);
         fetchUsers();
+        if (deletingInstance.userId === user?.id) {
+          refreshUser();
+        }
       } else {
         const data = await res.json();
         setDeleteInstanceError(data.error || "Erro ao atualizar usuário no banco local.");
@@ -582,6 +585,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 if (res.ok) {
                   setAddingInstanceTo(null);
                   fetchUsers();
+                  if (addingInstanceTo.id === user?.id) {
+                    refreshUser();
+                  }
                 } else {
                   alert("Erro ao adicionar instância.");
                 }
@@ -656,6 +662,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 if (res.ok) {
                   setEditingPlanFor(null);
                   fetchUsers();
+                  if (editingPlanFor.id === user?.id) {
+                    refreshUser();
+                  }
                 } else {
                   alert("Erro ao editar plano.");
                 }
