@@ -392,7 +392,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(new 
 app.use(express.static(path.join(dirname, '../dist')));
 
 // SPA Fallback: Any route not matching API should serve index.html
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(dirname, '../dist/index.html'));
 });
 
