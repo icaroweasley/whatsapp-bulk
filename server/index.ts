@@ -381,6 +381,21 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
   }
 });
 
+// Serve static files from the React app
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// In TypeScript with ES Modules (if applicable) or CommonJS:
+// Fallback if __dirname is not available:
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(new URL(import.meta.url).pathname);
+
+app.use(express.static(path.join(dirname, '../dist')));
+
+// SPA Fallback: Any route not matching API should serve index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(dirname, '../dist/index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
 });

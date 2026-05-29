@@ -10,7 +10,8 @@
     "dev:backend": "tsx watch server/index.ts",
     "build": "prisma generate && tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "tsx server/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
