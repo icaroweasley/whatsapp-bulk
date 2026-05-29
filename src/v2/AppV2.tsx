@@ -972,18 +972,14 @@ function AppV2() {
   };
 
   return (
-    <div className="relative min-h-screen font-sans text-white bg-black overflow-x-hidden">
-      {/* Background Video with Gradient Overlay */}
-      <div className="fixed inset-0 z-0">
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline
-          className="w-full h-full object-cover opacity-50 mix-blend-luminosity"
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none"></div>
+    <div className="relative min-h-screen font-sans text-white bg-transparent overflow-x-hidden selection:bg-emerald-500/30">
+      {/* ChatPulse Aesthetic Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[#0a0a0f]"></div>
+        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[150px]"></div>
+        <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-blue-600/15 rounded-full blur-[120px]"></div>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-3xl"></div>
       </div>
 
       {/* Main Content Wrapper */}
@@ -1266,12 +1262,12 @@ function AppV2() {
                     </div>
                     
                     {filteredTargetContacts.map(contact => (
-                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedTargetContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
+                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`rounded-xl p-2.5 flex items-center transition-all cursor-pointer border ${selectedTargetContacts.has(contact.id) ? 'bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-black/30 border-white/5 hover:bg-white/5'}`}>
                         <input 
                           type="checkbox" 
                           checked={selectedTargetContacts.has(contact.id)}
                           readOnly
-                          className="ml-1 mr-4 rounded-sm border-red-300/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                          className="ml-1 mr-4 rounded-sm border-white/20 bg-black/40 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
                         />
                         <div className="flex-1 flex flex-col min-w-0">
                           <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
@@ -1415,8 +1411,8 @@ function AppV2() {
                 <div className="relative z-10 flex flex-col h-full w-full">
                   <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4 text-center">Preview da Mensagem</h3>
                 
-                <div className="relative rounded-2xl overflow-hidden min-h-[250px] border border-white/5 shadow-inner bg-[#0b141a]">
-                  <div className="absolute inset-0 bg-repeat opacity-40 pointer-events-none" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: '400px'}}></div>
+                <div className="relative rounded-2xl overflow-hidden min-h-[250px] border border-white/5 shadow-inner bg-[#0f1015]">
+                  <div className="absolute inset-0 bg-repeat opacity-20 pointer-events-none" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: '400px'}}></div>
                   
                   <div className="relative z-10 p-4 flex flex-col gap-2 h-full">
                     {/* TEXT BEFORE MEDIA */}
@@ -1539,8 +1535,8 @@ function AppV2() {
                        <div key={log.id} className="flex items-start gap-3">
                          <span className="text-white/30 shrink-0">[{log.timestamp.toLocaleTimeString()}]</span>
                          <span className={`break-all ${
-                           log.status === 'error' ? 'text-red-300' : 
-                           log.status === 'success' ? 'text-emerald-300' : 
+                           log.status === 'error' ? 'text-red-400' : 
+                           log.status === 'success' ? 'text-emerald-400' : 
                            'text-white/70'
                          }`}>
                            {log.text}
