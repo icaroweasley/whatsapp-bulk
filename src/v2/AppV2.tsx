@@ -1032,12 +1032,12 @@ function AppV2() {
 
           {/* Steps Indicator */}
           <div className="flex justify-center w-full md:w-auto order-3 md:order-2 shrink-0">
-            <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/10 rounded-full px-1.5 py-1.5 md:px-2 shadow-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full md:w-auto justify-between md:justify-center">
-              <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 1 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>1. Conexão</button>
-              <div className="hidden md:block w-4 h-[1px] bg-white/10 shrink-0"></div>
-              <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 2 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>2. Listas</button>
-              <div className="hidden md:block w-4 h-[1px] bg-white/10 shrink-0"></div>
-              <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center ${currentScreen === 3 ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>3. Disparo</button>
+            <div className="flex items-center gap-1 md:gap-2 liquid-glass border border-white/5 rounded-full px-1.5 py-1.5 md:px-2 shadow-lg overflow-x-auto w-full md:w-auto justify-between md:justify-center bg-black/40">
+              <button onClick={() => setCurrentScreen(1)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 1 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>1. Conexão</button>
+              <div className="hidden md:block w-4 h-[1px] bg-white/5 shrink-0"></div>
+              <button onClick={() => nextScreen(2)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 2 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>2. Listas</button>
+              <div className="hidden md:block w-4 h-[1px] bg-white/5 shrink-0"></div>
+              <button onClick={() => nextScreen(3)} className={`px-3 md:px-5 py-2 rounded-full text-[10px] md:text-xs font-semibold transition-all whitespace-nowrap flex-1 md:flex-none text-center border ${currentScreen === 3 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-transparent text-white/50 hover:text-white hover:bg-white/5'}`}>3. Disparo</button>
             </div>
           </div>
         </header>

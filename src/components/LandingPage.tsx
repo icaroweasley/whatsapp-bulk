@@ -7,21 +7,14 @@ interface LandingPageProps {
 
 export default function LandingPage({ onLoginClick }: LandingPageProps) {
   return (
-    <div className="relative min-h-screen font-sans text-white bg-black overflow-x-hidden selection:bg-purple-500/30">
-      {/* Background Video with Gradient Overlay */}
-      <div className="fixed inset-0 z-0">
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline
-          className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black pointer-events-none"></div>
-        {/* Glow Effects */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div className="relative min-h-screen font-sans text-white bg-transparent overflow-x-hidden selection:bg-emerald-500/30">
+      {/* ChatPulse Aesthetic Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[#0a0a0f]"></div>
+        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[150px]"></div>
+        <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-blue-600/15 rounded-full blur-[120px]"></div>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-3xl"></div>
       </div>
 
       {/* Navbar */}
