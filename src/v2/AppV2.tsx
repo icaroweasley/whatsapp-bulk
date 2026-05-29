@@ -976,9 +976,9 @@ function AppV2() {
       {/* ChatPulse Aesthetic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[#0a0a0f]"></div>
-        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]"></div>
-        <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[150px]"></div>
-        <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-blue-600/15 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-600/40 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute top-[30%] right-[-10%] w-[700px] h-[700px] bg-emerald-500/30 rounded-full blur-[150px] animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/30 rounded-full blur-[120px] animate-blob animation-delay-4000"></div>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-3xl"></div>
       </div>
 
@@ -1129,7 +1129,7 @@ function AppV2() {
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
               
               {/* Left Panel: Fetched Contacts */}
-              <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
+              <div className={`w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1217,7 +1217,7 @@ function AppV2() {
             </div>
 
             {/* Right Panel: Target List */}
-            <div className={`w-full lg:w-1/2 liquid-panel rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col gap-5">
@@ -1351,7 +1351,7 @@ function AppV2() {
           <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 liquid-panel rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
+            <div className="w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
               <div className="relative z-10 flex flex-col h-full w-full">
@@ -1448,7 +1448,7 @@ function AppV2() {
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
               
               {/* Preview Card */}
-              <div className="liquid-panel rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
+              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 
                 <div className="relative z-10 flex flex-col h-full w-full">
@@ -1516,7 +1516,7 @@ function AppV2() {
               </div>
 
               {/* Summary Card */}
-              <div className="liquid-panel rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
+              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
                 <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4">Resumo do Disparo</h3>
                 <div className="text-7xl font-light tracking-tighter text-white mb-3">
@@ -1565,7 +1565,7 @@ function AppV2() {
               </div>
 
               {/* Activity Console */}
-              <div className="liquid-panel rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
+              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
                  <div className="px-6 py-5 flex justify-between items-center border-b border-white/5">
                    <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Console de Atividade</span>
                    <button onClick={clearLogs} className="text-[10px] uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors">Limpar</button>
