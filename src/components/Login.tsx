@@ -70,7 +70,7 @@ export default function Login({ onBack }: LoginProps) {
         {/* Header / Logo */}
         <div className="flex flex-col items-center gap-2 mb-10">
           <div className="w-28 h-28 flex items-center justify-center drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-            <img src="/logo.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain mix-blend-screen" />
+            <img src="/logo_v2.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain mix-blend-screen" />
           </div>
           <span className="font-semibold text-3xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
         </div>
