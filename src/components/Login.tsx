@@ -79,7 +79,7 @@ export default function Login({ onBack }: LoginProps) {
           {onBack && (
             <button 
               onClick={onBack}
-              className="absolute top-6 left-6 text-white/40 hover:text-white text-sm flex items-center gap-2 transition-colors font-medium"
+              className="mb-8 text-white/40 hover:text-white text-sm flex items-center gap-2 transition-colors font-medium"
             >
               ← Voltar
             </button>
