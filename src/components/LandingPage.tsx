@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rocket, Users, MessageSquare, Database, ArrowRight } from 'lucide-react';
+import { Rocket, Users, MessageSquare, Database, ArrowRight, Plug } from 'lucide-react';
 
 interface LandingPageProps {
   onLoginClick: () => void;
@@ -107,19 +107,28 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="liquid-panel rounded-[2rem] p-10 border border-white/10 bg-white/5 backdrop-blur-xl text-center hover:-translate-y-2 transition-transform duration-500">
-             <div className="text-emerald-400 font-bold text-5xl mb-6">1</div>
+             <div className="text-emerald-400 font-bold text-5xl mb-6 flex items-center justify-center gap-4">
+               <span>1</span>
+               <Plug size={40} className="opacity-80" />
+             </div>
              <h3 className="text-2xl font-semibold mb-4">Conecte seu WhatsApp</h3>
              <p className="text-white/50 text-sm leading-relaxed">Escaneie o QR Code e conecte o seu aparelho com segurança à nossa infraestrutura otimizada em nuvem.</p>
           </div>
           
           <div className="liquid-panel rounded-[2rem] p-10 border border-white/10 bg-white/5 backdrop-blur-xl text-center hover:-translate-y-2 transition-transform duration-500">
-             <div className="text-purple-400 font-bold text-5xl mb-6">2</div>
+             <div className="text-purple-400 font-bold text-5xl mb-6 flex items-center justify-center gap-4">
+               <span>2</span>
+               <Users size={40} className="opacity-80" />
+             </div>
              <h3 className="text-2xl font-semibold mb-4">Importe seus Contatos</h3>
              <p className="text-white/50 text-sm leading-relaxed">Puxe os contatos diretamente da sua agenda do celular ou crie listas segmentadas específicas para cada campanha.</p>
           </div>
           
           <div className="liquid-panel rounded-[2rem] p-10 border border-white/10 bg-white/5 backdrop-blur-xl text-center hover:-translate-y-2 transition-transform duration-500">
-             <div className="text-cyan-400 font-bold text-5xl mb-6">3</div>
+             <div className="text-cyan-400 font-bold text-5xl mb-6 flex items-center justify-center gap-4">
+               <span>3</span>
+               <MessageSquare size={40} className="opacity-80" />
+             </div>
              <h3 className="text-2xl font-semibold mb-4">Dispare a Campanha</h3>
              <p className="text-white/50 text-sm leading-relaxed">Escreva a mensagem, anexe mídias, defina um intervalo humano inteligente e deixe o envio rodar no automático.</p>
           </div>
