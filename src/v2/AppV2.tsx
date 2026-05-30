@@ -977,36 +977,36 @@ function AppV2() {
   };
 
   return (
-    <div className="relative min-h-screen font-sans text-white bg-transparent overflow-x-hidden selection:bg-emerald-500/30">
+    <div className="relative min-h-[100dvh] font-sans text-white bg-transparent overflow-x-hidden selection:bg-emerald-500/30">
       {/* ChatPulse Aesthetic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[#0a0a0f]"></div>
-        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-600/70 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-600/60 rounded-full blur-[120px] animate-blob"></div>
         <div className="absolute top-[30%] right-[-10%] w-[700px] h-[700px] bg-emerald-500/60 rounded-full blur-[150px] animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/60 rounded-full blur-[120px] animate-blob animation-delay-4000"></div>
-        <div className="absolute top-[40%] left-[20%] w-[400px] h-[400px] bg-rose-500/50 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-[20%] right-[20%] w-[450px] h-[450px] bg-cyan-500/50 rounded-full blur-[120px] animate-blob"></div>
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-3xl"></div>
+        <div className="absolute top-[60%] left-[40%] w-[400px] h-[400px] bg-pink-600/40 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute top-[10%] right-[30%] w-[450px] h-[450px] bg-amber-500/40 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-3xl"></div>
       </div>
 
       {/* Main Content Wrapper - ChatPulse Desktop App Style */}
-      <div className="relative z-10 flex h-screen p-4 lg:p-6 w-full max-w-[1600px] mx-auto items-center justify-center">
+      <div className="relative z-10 flex h-[100dvh] p-2 md:p-4 lg:p-6 w-full max-w-[1600px] mx-auto items-center justify-center">
         
         {/* App Window Shell */}
-        <div className="w-full h-full lg:max-h-[900px] liquid-panel rounded-[2rem] flex flex-col md:flex-row overflow-hidden border border-white/10 shadow-2xl relative">
+        <div className="w-full h-full max-h-full lg:max-h-[900px] liquid-panel rounded-2xl md:rounded-[2rem] flex flex-col md:flex-row overflow-hidden border border-white/10 shadow-2xl relative">
           
           {/* Left Sidebar */}
-          <aside className="w-full h-16 md:w-24 md:h-full shrink-0 flex flex-row md:flex-col items-center justify-around md:justify-start px-4 md:px-0 py-0 md:py-6 border-t md:border-t-0 md:border-r border-white/5 relative z-20 bg-black/40 md:bg-black/20 order-last md:order-first">
+          <aside className="w-full h-16 md:w-24 md:h-full shrink-0 flex flex-row md:flex-col items-center justify-between md:justify-start px-6 md:px-0 py-0 md:py-6 border-b md:border-b-0 md:border-r border-white/5 relative z-20 bg-black/40 md:bg-black/20 order-first">
             {/* Sidebar Gradient Glow */}
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-500/10 via-transparent to-blue-500/10 opacity-50 pointer-events-none"></div>
             
             {/* Logo */}
-            <div className="hidden md:flex w-12 h-12 mb-10 items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
+            <div className="flex w-10 h-10 md:w-12 md:h-12 md:mb-10 items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
               <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
 
             {/* Nav Icons */}
-            <nav className="flex-1 w-full flex flex-row md:flex-col items-center justify-around md:justify-start gap-0 md:gap-6 relative z-10">
+            <nav className="flex-1 w-auto md:w-full flex flex-row md:flex-col items-center justify-center md:justify-start gap-6 md:gap-6 relative z-10">
               <button 
                 onClick={() => setCurrentScreen(1)} 
                 className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
@@ -1036,7 +1036,7 @@ function AppV2() {
             </nav>
 
             {/* Bottom Sidebar Actions */}
-            <div className="flex flex-col gap-4 mt-auto relative z-10 w-full items-center">
+            <div className="flex flex-row md:flex-col gap-4 md:mt-auto relative z-10 w-auto md:w-full items-center">
               {user?.username === 'karu' && (
                 <button
                   onClick={() => setShowAdmin(true)}
