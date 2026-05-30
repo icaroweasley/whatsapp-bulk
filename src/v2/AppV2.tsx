@@ -1171,30 +1171,26 @@ function AppV2() {
               <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 <div className="relative z-10 flex flex-col h-full w-full">
-              <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h2 className="text-xl font-medium text-white tracking-tight">Contatos da Instância</h2>
-                  <p className="text-xs text-white/50 mt-1">Busque os contatos diretamente da sua API.</p>
+              <div className="p-4 pb-2 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-medium text-white tracking-tight">Contatos da Instância</h2>
+                  <button 
+                    onClick={() => fetchContacts()}
+                    disabled={isLoadingContacts}
+                    className="liquid-glass border border-white/10 rounded-full px-4 py-1.5 text-[11px] md:text-xs font-semibold flex items-center gap-1.5 hover:bg-white/10 transition-colors disabled:opacity-50"
+                  >
+                    <Users size={12} />
+                    {isLoadingContacts ? 'Buscando...' : 'Buscar da API'}
+                  </button>
                 </div>
-                <button 
-                  onClick={() => fetchContacts()}
-                  disabled={isLoadingContacts}
-                  className="liquid-glass border border-white/10 rounded-full px-5 py-2.5 text-xs font-semibold flex items-center gap-2 hover:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  <Users size={14} />
-                  {isLoadingContacts ? 'Buscando...' : 'Buscar da API'}
-                </button>
-              </div>
-
-              <div className="px-5 pb-4">
                 <div className="relative">
-                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
                   <input 
                     type="text" 
                     value={searchAll}
                     onChange={(e) => setSearchAll(e.target.value)}
                     placeholder="Pesquisar contatos..."
-                    className="liquid-glass w-full rounded-full pl-11 pr-4 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
+                    className="liquid-glass w-full rounded-full pl-9 pr-4 py-2 text-xs text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
                   />
                 </div>
               </div>
@@ -1214,23 +1210,23 @@ function AppV2() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/80 backdrop-blur-xl rounded-lg mb-2 z-10">
+                    <div className="flex items-center px-3 py-2 text-[10px] uppercase tracking-wider text-white/70 font-semibold sticky top-0 bg-black/60 backdrop-blur-md border border-white/5 rounded-lg mb-2 z-10">
                       <input 
                         type="checkbox" 
                         checked={allContacts.length > 0 && selectedAllContacts.size === filteredAllContacts.length}
                         onChange={toggleAllAllSelection}
-                        className="mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                        className="mr-3 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
                       />
-                      <div className="flex-1">Identidade ({filteredAllContacts.length})</div>
+                      <div className="flex-1">Todos ({filteredAllContacts.length})</div>
                     </div>
                     
                     {filteredAllContacts.map(contact => (
-                      <div key={contact.id} onClick={() => toggleAllSelection(contact.id)} className={`liquid-glass rounded-xl p-2.5 flex items-center hover:bg-white/10 transition-colors cursor-pointer border border-transparent ${selectedAllContacts.has(contact.id) ? 'bg-white/5 border-white/20' : ''}`}>
+                      <div key={contact.id} onClick={() => toggleAllSelection(contact.id)} className={`rounded-xl p-2 flex items-center hover:bg-white/10 transition-colors cursor-pointer border ${selectedAllContacts.has(contact.id) ? 'bg-white/15 border-white/30 shadow-[0_0_10px_rgba(255,255,255,0.05)]' : 'bg-white/5 border-white/5'}`}>
                         <input 
                           type="checkbox" 
                           checked={selectedAllContacts.has(contact.id)}
                           readOnly
-                          className="ml-1 mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                          className="ml-1 mr-3 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
                         />
                         <div className="flex-1 flex flex-col min-w-0">
                           <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
@@ -1259,68 +1255,57 @@ function AppV2() {
             <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               <div className="relative z-10 flex flex-col h-full w-full">
-              <div className="p-5 flex flex-col gap-5">
+              <div className="p-4 pb-2 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-medium text-white tracking-tight">Lista de Disparo (Alvo)</h2>
-                  <span className="liquid-glass border border-white/10 px-3 py-1.5 rounded-full text-[11px] md:text-xs font-medium text-white/90 whitespace-nowrap shrink-0 ml-2">
+                  <h2 className="text-lg font-medium text-white tracking-tight">Lista Alvo</h2>
+                  <span className="liquid-glass border border-white/10 px-3 py-1 rounded-full text-[10px] md:text-xs font-medium text-white/90 whitespace-nowrap shrink-0 ml-2">
                     {targetContacts.length} contatos
                   </span>
                 </div>
                 
-                {/* List Management UI */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 p-2 md:p-3 liquid-glass rounded-xl bg-black/20">
-                  <div className="flex flex-col gap-1 md:gap-2">
-                    <label className="text-[9px] md:text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Listas Salvas</label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <FolderOpen size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50" />
-                        <select 
-                          value={selectedListId}
-                          onChange={loadSavedList} 
-                          className="liquid-glass w-full rounded-lg pl-7 pr-2 py-1.5 md:py-2 text-[11px] md:text-xs text-white/80 focus:outline-none appearance-none cursor-pointer hover:bg-white/5 bg-transparent"
-                        >
-                          <option value="" disabled className="text-black bg-white">Selecione uma lista...</option>
-                          {savedLists.filter(l => !l.instanceName || l.instanceName === instanceName).map(list => (
-                            <option key={list.id} value={list.id} className="text-black bg-white">{list.name} ({list.contacts.length})</option>
-                          ))}
-                        </select>
-                      </div>
-                      {selectedListId && (
-                        <button onClick={() => deleteList(selectedListId)} className="liquid-glass p-1.5 md:p-2 rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors" title="Excluir Lista Selecionada">
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-1 md:gap-2">
-                    <label className="text-[9px] md:text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Salvar Lista Alvo</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={listName}
-                        onChange={(e) => setListName(e.target.value)}
-                        placeholder="Nome da lista" 
-                        className="liquid-glass flex-1 rounded-lg px-2.5 py-1.5 md:py-2 text-[11px] md:text-xs text-white placeholder-white/40 focus:outline-none"
-                      />
-                      <button onClick={saveCurrentList} className="liquid-glass p-1.5 md:p-2 rounded-lg hover:bg-white/10" title="Salvar Lista">
-                        <Save size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-5 pb-4">
                 <div className="relative">
-                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
                   <input 
                     type="text" 
                     value={searchTarget}
                     onChange={(e) => setSearchTarget(e.target.value)}
                     placeholder="Filtrar na lista alvo..."
-                    className="liquid-glass w-full rounded-full pl-11 pr-4 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
+                    className="liquid-glass w-full rounded-full pl-9 pr-4 py-2 text-xs text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/30 transition-all"
                   />
+                </div>
+
+                {/* Compact List Management */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1 min-w-0">
+                    <select 
+                      value={selectedListId}
+                      onChange={loadSavedList} 
+                      className="liquid-glass w-full rounded-lg px-2 py-1.5 text-[10px] md:text-xs text-white/80 focus:outline-none appearance-none cursor-pointer bg-transparent truncate"
+                    >
+                      <option value="" disabled className="text-black bg-white">📂 Carregar lista...</option>
+                      {savedLists.filter(l => !l.instanceName || l.instanceName === instanceName).map(list => (
+                        <option key={list.id} value={list.id} className="text-black bg-white">{list.name} ({list.contacts.length})</option>
+                      ))}
+                    </select>
+                    {selectedListId && (
+                      <button onClick={() => deleteList(selectedListId)} className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors" title="Excluir Lista">
+                        <Trash2 size={10} />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-1 gap-1 min-w-0">
+                    <input 
+                      type="text" 
+                      value={listName}
+                      onChange={(e) => setListName(e.target.value)}
+                      placeholder="Nome para salvar" 
+                      className="liquid-glass flex-1 min-w-0 rounded-lg px-2 py-1.5 text-[10px] md:text-xs text-white placeholder-white/40 focus:outline-none"
+                    />
+                    <button onClick={saveCurrentList} className="liquid-glass px-2.5 rounded-lg hover:bg-white/10 text-white/70" title="Salvar Lista">
+                      <Save size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1333,23 +1318,23 @@ function AppV2() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/80 backdrop-blur-xl rounded-lg mb-2 z-10">
+                    <div className="flex items-center px-3 py-2 text-[10px] uppercase tracking-wider text-white/70 font-semibold sticky top-0 bg-black/60 backdrop-blur-md border border-white/5 rounded-lg mb-2 z-10">
                       <input 
                         type="checkbox" 
                         checked={targetContacts.length > 0 && selectedTargetContacts.size === filteredTargetContacts.length}
                         onChange={toggleAllTargetSelection}
-                        className="mr-4 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                        className="mr-3 rounded-sm border-white/30 bg-white/10 text-white focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-white checked:border-white relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
                       />
-                      <div className="flex-1">Lista Alvo ({filteredTargetContacts.length})</div>
+                      <div className="flex-1">Todos ({filteredTargetContacts.length})</div>
                     </div>
                     
                     {filteredTargetContacts.map(contact => (
-                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`rounded-xl p-2.5 flex items-center transition-all cursor-pointer border ${selectedTargetContacts.has(contact.id) ? 'bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-black/30 border-white/5 hover:bg-white/5'}`}>
+                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`rounded-xl p-2 flex items-center transition-all cursor-pointer border ${selectedTargetContacts.has(contact.id) ? 'bg-emerald-500/15 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
                         <input 
                           type="checkbox" 
                           checked={selectedTargetContacts.has(contact.id)}
                           readOnly
-                          className="ml-1 mr-4 rounded-sm border-white/20 bg-black/40 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                          className="ml-1 mr-3 rounded-sm border-white/20 bg-black/40 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
                         />
                         <div className="flex-1 flex flex-col min-w-0">
                           <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
