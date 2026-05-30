@@ -381,6 +381,101 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
   }
 });
 
+// Proxy: Evolution API
+app.all('/api-proxy/*', async (req: any, res: any) => {
+  const targetUrlStr = req.headers['x-target-url'];
+  if (!targetUrlStr) {
+    return res.status(400).json({ error: 'Missing x-target-url header. O painel precisa enviar a URL da API.' });
+  }
+
+  const pathPart = req.originalUrl.replace('/api-proxy', '') || '/';
+  const isSendingMessage = pathPart.includes('/message/sendText') || pathPart.includes('/message/sendMedia');
+  let userId = null;
+
+  if (isSendingMessage) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Token de autorização não fornecido para disparo.' });
+    }
+
+    try {
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      userId = decoded.id;
+      
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user || user.planStatus !== 'active') {
+        return res.status(403).json({ error: 'Assinatura inativa. Pague o plano para fazer disparos.' });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const usage = await prisma.dailyUsage.upsert({
+        where: { userId_date: { userId: user.id, date: today } },
+        update: {},
+        create: { userId: user.id, date: today, messageCount: 0 }
+      });
+
+      if (usage.messageCount >= 1000) {
+        return res.status(403).json({ error: 'Limite diário de 1.000 mensagens atingido.' });
+      }
+    } catch (e) {
+      return res.status(401).json({ error: 'Token inválido.' });
+    }
+  }
+
+  try {
+    const targetUrl = new URL(targetUrlStr + pathPart);
+    const fetchHeaders: any = { ...req.headers };
+    
+    delete fetchHeaders['x-target-url'];
+    delete fetchHeaders.host;
+    delete fetchHeaders.origin;
+    delete fetchHeaders.referer;
+    delete fetchHeaders['connection'];
+    delete fetchHeaders['content-length'];
+    delete fetchHeaders['accept-encoding'];
+
+    let body = undefined;
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+       if (req.body && Object.keys(req.body).length > 0) {
+           body = JSON.stringify(req.body);
+           fetchHeaders['content-type'] = 'application/json';
+       } else if (req.body) {
+           body = req.body;
+       }
+    }
+
+    const response = await fetch(targetUrl.toString(), {
+      method: req.method,
+      headers: fetchHeaders,
+      body: body
+    });
+
+    const data = await response.text();
+
+    if (isSendingMessage && response.ok && userId) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      await prisma.dailyUsage.update({
+        where: { userId_date: { userId, date: today } },
+        data: { messageCount: { increment: 1 } }
+      });
+    }
+
+    if (response.headers.get('content-type')) {
+      res.setHeader('content-type', response.headers.get('content-type'));
+    }
+
+    return res.status(response.status).send(data);
+  } catch (error: any) {
+    console.error('Proxy Error:', error);
+    return res.status(500).json({ error: `Proxy Error: ${error.message}` });
+  }
+});
+
 // Serve static files from the React app
 import path from 'path';
 import { fileURLToPath } from 'url';
