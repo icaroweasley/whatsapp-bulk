@@ -1147,7 +1147,7 @@ function AppV2() {
 
         {/* SCREEN 2: LIST MANAGEMENT */}
         {currentScreen === 2 && (
-          <div className="flex-1 flex flex-col w-full h-[60vh] md:h-auto md:max-h-[calc(100vh-140px)] min-h-0">
+          <div className="flex-1 flex flex-col w-full min-h-[80vh] md:min-h-0 md:h-auto md:max-h-[calc(100vh-140px)]">
             
             {/* Mobile Tabs for Step 2 */}
             <div className="flex lg:hidden w-full mb-4 liquid-glass rounded-xl p-1 shrink-0">
@@ -1214,7 +1214,7 @@ function AppV2() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/20 backdrop-blur-md rounded-lg mb-2 z-10">
+                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/80 backdrop-blur-xl rounded-lg mb-2 z-10">
                       <input 
                         type="checkbox" 
                         checked={allContacts.length > 0 && selectedAllContacts.size === filteredAllContacts.length}
@@ -1268,16 +1268,16 @@ function AppV2() {
                 </div>
                 
                 {/* List Management UI */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 liquid-glass rounded-2xl bg-black/20">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Listas Salvas</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 p-2 md:p-3 liquid-glass rounded-xl bg-black/20">
+                  <div className="flex flex-col gap-1 md:gap-2">
+                    <label className="text-[9px] md:text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Listas Salvas</label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <FolderOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+                        <FolderOpen size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50" />
                         <select 
                           value={selectedListId}
                           onChange={loadSavedList} 
-                          className="liquid-glass w-full rounded-xl pl-9 pr-3 py-2 text-xs text-white/80 focus:outline-none appearance-none cursor-pointer hover:bg-white/5 bg-transparent"
+                          className="liquid-glass w-full rounded-lg pl-7 pr-2 py-1.5 md:py-2 text-[11px] md:text-xs text-white/80 focus:outline-none appearance-none cursor-pointer hover:bg-white/5 bg-transparent"
                         >
                           <option value="" disabled className="text-black bg-white">Selecione uma lista...</option>
                           {savedLists.filter(l => !l.instanceName || l.instanceName === instanceName).map(list => (
@@ -1286,25 +1286,25 @@ function AppV2() {
                         </select>
                       </div>
                       {selectedListId && (
-                        <button onClick={() => deleteList(selectedListId)} className="liquid-glass p-2 rounded-xl hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors" title="Excluir Lista Selecionada">
-                          <Trash2 size={14} />
+                        <button onClick={() => deleteList(selectedListId)} className="liquid-glass p-1.5 md:p-2 rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors" title="Excluir Lista Selecionada">
+                          <Trash2 size={12} />
                         </button>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Salvar Lista Alvo</label>
+                  <div className="flex flex-col gap-1 md:gap-2">
+                    <label className="text-[9px] md:text-[10px] uppercase text-white/50 px-1 font-medium tracking-wider">Salvar Lista Alvo</label>
                     <div className="flex gap-2">
                       <input 
                         type="text" 
                         value={listName}
                         onChange={(e) => setListName(e.target.value)}
                         placeholder="Nome da lista" 
-                        className="liquid-glass flex-1 rounded-xl px-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none"
+                        className="liquid-glass flex-1 rounded-lg px-2.5 py-1.5 md:py-2 text-[11px] md:text-xs text-white placeholder-white/40 focus:outline-none"
                       />
-                      <button onClick={saveCurrentList} className="liquid-glass p-2 rounded-xl hover:bg-white/10" title="Salvar Lista">
-                        <Save size={14} />
+                      <button onClick={saveCurrentList} className="liquid-glass p-1.5 md:p-2 rounded-lg hover:bg-white/10" title="Salvar Lista">
+                        <Save size={12} />
                       </button>
                     </div>
                   </div>
@@ -1333,7 +1333,7 @@ function AppV2() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/20 backdrop-blur-md rounded-lg mb-2 z-10">
+                    <div className="flex items-center px-4 py-2 text-[10px] uppercase tracking-wider text-white/50 font-medium sticky top-0 bg-black/80 backdrop-blur-xl rounded-lg mb-2 z-10">
                       <input 
                         type="checkbox" 
                         checked={targetContacts.length > 0 && selectedTargetContacts.size === filteredTargetContacts.length}
