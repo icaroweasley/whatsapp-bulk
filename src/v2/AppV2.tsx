@@ -1002,7 +1002,7 @@ function AppV2() {
               <div className="w-8 h-8 flex items-center justify-center drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]">
                 <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
-              <span className="font-semibold text-lg tracking-tight text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+              <span className="font-semibold text-lg tracking-tight text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
             </div>
             
             <div className="flex items-center gap-3">
@@ -1088,7 +1088,7 @@ function AppV2() {
             {/* Desktop Top Bar (Hidden on Mobile) */}
             <header className="hidden md:flex h-20 border-b border-white/5 shrink-0 items-center justify-between px-8 bg-black/10">
               <div className="flex items-center gap-4">
-                <span className="font-semibold text-xl tracking-tight text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+                <span className="font-semibold text-xl tracking-tight text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
                 <div className="w-px h-5 bg-white/10 mx-2 hidden sm:block"></div>
                 <div className="hidden sm:flex items-center gap-2">
                   <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{instanceName ? 'CONEXÃO ATIVA' : 'DESCONECTADO'}</span>

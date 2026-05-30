@@ -72,9 +72,9 @@ export default function Login({ onBack }: LoginProps) {
         {/* Header / Logo */}
         <div className="flex flex-col items-center gap-2 mb-10">
           <div className="w-28 h-28 flex items-center justify-center drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-            <img src="/logo_v3.png" alt="WhatsApp Bulk Logo" className="w-full h-full object-contain" />
+            <img src="/logo_v3.png" alt="ZapBulk Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-semibold text-3xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+          <span className="font-semibold text-3xl tracking-tighter text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
         </div>
 
         <div className="liquid-panel rounded-[2rem] p-8 lg:p-10 w-full space-y-6 relative overflow-hidden backdrop-blur-2xl border border-white/10 bg-white/5 shadow-2xl">

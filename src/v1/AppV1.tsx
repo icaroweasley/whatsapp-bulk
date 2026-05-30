@@ -822,7 +822,7 @@ function AppV1() {
             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)]">
               <MessageSquare size={18} className="text-black" fill="currentColor" />
             </div>
-            <span className="font-semibold text-2xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+            <span className="font-semibold text-2xl tracking-tighter text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
           </div>
           
           {/* Steps Indicator */}

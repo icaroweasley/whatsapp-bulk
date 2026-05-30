@@ -25,7 +25,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           <div className="w-12 h-12 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]">
             <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-semibold text-xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
+          <span className="font-semibold text-xl tracking-tighter text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
         </div>
         <button 
           onClick={onLoginClick}
@@ -150,7 +150,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 text-center py-10 text-white/30 text-sm">
-        <p>© {new Date().getFullYear()} WhatsApp Bulk Pro. Desenvolvido para máxima conversão.</p>
+        <p>© {new Date().getFullYear()} ZapBulk Pro. Desenvolvido para máxima conversão.</p>
       </footer>
     </div>
   );
