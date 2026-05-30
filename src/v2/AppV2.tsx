@@ -1119,7 +1119,7 @@ function AppV2() {
             </header>
 
             {/* Inner Content Scroller */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0">
 
         
         {/* SCREEN 1: CONNECTION */}
@@ -1147,7 +1147,7 @@ function AppV2() {
 
         {/* SCREEN 2: LIST MANAGEMENT */}
         {currentScreen === 2 && (
-          <div className="flex-1 flex flex-col w-full min-h-[80vh] md:min-h-0 md:h-auto md:max-h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col w-full min-h-0 md:max-h-[calc(100vh-140px)]">
             
             {/* Mobile Tabs for Step 2 */}
             <div className="flex lg:hidden w-full mb-4 liquid-glass rounded-xl p-1 shrink-0">
@@ -1262,7 +1262,7 @@ function AppV2() {
               <div className="p-5 flex flex-col gap-5">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-medium text-white tracking-tight">Lista de Disparo (Alvo)</h2>
-                  <span className="liquid-glass border border-white/10 px-4 py-1.5 rounded-full text-xs font-medium text-white/90">
+                  <span className="liquid-glass border border-white/10 px-3 py-1.5 rounded-full text-[11px] md:text-xs font-medium text-white/90 whitespace-nowrap shrink-0 ml-2">
                     {targetContacts.length} contatos
                   </span>
                 </div>
