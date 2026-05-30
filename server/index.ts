@@ -382,7 +382,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
 });
 
 // Proxy: Evolution API
-app.all('/api-proxy/*', async (req: any, res: any) => {
+app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
   const targetUrlStr = req.headers['x-target-url'];
   if (!targetUrlStr) {
     return res.status(400).json({ error: 'Missing x-target-url header. O painel precisa enviar a URL da API.' });
