@@ -842,8 +842,15 @@ function AppV2() {
            });
            const textResponse = await response.text();
            if (!response.ok) {
-              let err = response.status.toString();
-              try { err += ' - ' + JSON.parse(textResponse).message; } catch(e) {}
+               let err = response.status.toString();
+               try { 
+                 const parsed = JSON.parse(textResponse);
+                 let msg = parsed?.response?.message || parsed?.message || parsed?.error || "";
+                 if (Array.isArray(msg)) msg = msg[0];
+                 if (msg) err += ' - ' + msg;
+               } catch(e) {
+                 if (textResponse && textResponse.length < 150) err += ' - ' + textResponse;
+               }
               throw new Error(err);
            }
         };
@@ -885,7 +892,14 @@ function AppV2() {
                 
                 if (!response.ok) {
                    let err = response.status.toString();
-                   try { err += ' - ' + JSON.parse(textResponse).message; } catch(e) {}
+                   try { 
+                     const parsed = JSON.parse(textResponse);
+                     let msg = parsed?.response?.message || parsed?.message || parsed?.error || "";
+                     if (Array.isArray(msg)) msg = msg[0];
+                     if (msg) err += ' - ' + msg;
+                   } catch(e) {
+                     if (textResponse && textResponse.length < 150) err += ' - ' + textResponse;
+                   }
                    throw new Error(err);
                 }
 
