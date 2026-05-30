@@ -233,20 +233,27 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div>
             <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Sua Instância Atribuída</label>
             {instances.length > 0 ? (
-              <div className="relative">
-                <select
-                  value={instanceName}
-                  onChange={(e) => setInstanceName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg appearance-none cursor-pointer"
-                >
-                  {instances.map((inst: string) => (
-                    <option key={inst} value={inst} className="bg-black text-white">{inst}</option>
-                  ))}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown size={20} className="text-white/50" />
+              <>
+                <div className="relative">
+                  <select
+                    value={instanceName}
+                    onChange={(e) => setInstanceName(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg appearance-none cursor-pointer"
+                  >
+                    {instances.map((inst: string) => (
+                      <option key={inst} value={inst} className="bg-black text-white">{inst}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown size={20} className="text-white/50" />
+                  </div>
                 </div>
-              </div>
+                <div className="mt-4 text-[11px] text-white/50 bg-black/20 border border-white/5 rounded-xl p-4 leading-relaxed">
+                  <span className="font-semibold text-white/70 block mb-1">Como conectar:</span> 
+                  Abra o WhatsApp &gt; clique nos três pontinhos no lado direito superior &gt; Dispositivos Conectados &gt; Conectar Dispositivo &gt; escaneie o código QR
+                </div>
+              </>
+
             ) : (
               <input
                 type="text"

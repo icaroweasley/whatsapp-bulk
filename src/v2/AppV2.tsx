@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useDeferredValue, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import ConnectionManager from './ConnectionManager';
-import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2 } from 'lucide-react';
+import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2, Plug } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -1035,29 +1035,29 @@ function AppV2() {
             <nav className="flex-1 w-auto md:w-full flex flex-row md:flex-col items-center justify-center md:justify-start gap-6 md:gap-6 relative z-10">
               <button 
                 onClick={() => setCurrentScreen(1)} 
-                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                className={`relative w-16 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 title="1. Conexão"
               >
                 {currentScreen === 1 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-emerald-400 rounded-l-md shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <div className="flex items-center gap-1.5"><span className="text-[11px] font-black opacity-40">1</span><Plug size={20} /></div>
               </button>
 
               <button 
                 onClick={() => nextScreen(2)} 
-                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 2 ? 'bg-white/10 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                className={`relative w-16 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 2 ? 'bg-white/10 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 title="2. Listas"
               >
                 {currentScreen === 2 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-purple-400 rounded-l-md shadow-[0_0_10px_rgba(168,85,247,0.8)]"></div>}
-                <Users size={22} />
+                <div className="flex items-center gap-1.5"><span className="text-[11px] font-black opacity-40">2</span><Users size={20} /></div>
               </button>
 
               <button 
                 onClick={() => nextScreen(3)} 
-                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 3 ? 'bg-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                className={`relative w-16 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 3 ? 'bg-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 title="3. Disparo"
               >
                 {currentScreen === 3 && <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-cyan-400 rounded-l-md shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>}
-                <MessageSquare size={22} />
+                <div className="flex items-center gap-1.5"><span className="text-[11px] font-black opacity-40">3</span><MessageSquare size={20} /></div>
               </button>
             </nav>
 
