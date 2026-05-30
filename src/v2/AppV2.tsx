@@ -1119,7 +1119,7 @@ function AppV2() {
             </header>
 
             {/* Inner Content Scroller */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0">
+            <div className={`flex-1 overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0 ${currentScreen === 2 ? 'overflow-hidden' : 'overflow-y-auto'}`}>
 
         
         {/* SCREEN 1: CONNECTION */}
@@ -1168,7 +1168,7 @@ function AppV2() {
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
               
               {/* Left Panel: Fetched Contacts */}
-              <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
+              <div className={`flex-1 w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-4 pb-2 flex flex-col gap-3">
@@ -1252,7 +1252,7 @@ function AppV2() {
             </div>
 
             {/* Right Panel: Target List */}
-            <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`flex-1 w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-4 pb-2 flex flex-col gap-3">
