@@ -97,12 +97,12 @@ app.post('/api/auth/register', async (req, res) => {
 
     const instancesArray = [user.instances];
     const token = jwt.sign(
-      { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus },
+      { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice } });
+    res.status(201).json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro no servidor' });
@@ -165,7 +165,7 @@ app.put('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
       data
     });
 
-    res.json({ message: 'Usuário atualizado!', user: { id: user.id, username: user.username, instances: user.instances, planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, customPrice: user.customPrice } });
+    res.json({ message: 'Usuário atualizado!', user: { id: user.id, username: user.username, instances: user.instances, planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }

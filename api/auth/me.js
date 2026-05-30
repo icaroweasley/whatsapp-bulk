@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         id: user.id, 
         username: user.username, 
         instances: instancesArray, 
-        planStatus: user.planStatus 
+        planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId 
       } 
     });
   } catch (error) {

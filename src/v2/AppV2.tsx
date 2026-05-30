@@ -993,7 +993,7 @@ function AppV2() {
       <div className="relative z-10 flex h-[100dvh] p-2 md:p-4 lg:p-6 w-full max-w-[1600px] mx-auto items-center justify-center">
         
         {/* App Window Shell */}
-        <div className="w-full h-full max-h-full lg:max-h-[900px] liquid-panel rounded-2xl md:rounded-[2rem] flex flex-col md:flex-row overflow-hidden border border-white/10 shadow-2xl relative">
+        <div className="w-full h-full max-h-full lg:max-h-[900px] liquid-panel rounded-[2rem] flex flex-col md:flex-row overflow-hidden border border-white/10 shadow-2xl relative">
           
           {/* Left Sidebar */}
                     {/* Mobile Header (Visible only on Mobile, above Sidebar) */}
@@ -1144,7 +1144,7 @@ function AppV2() {
 
         {/* SCREEN 2: LIST MANAGEMENT */}
         {currentScreen === 2 && (
-          <div className="flex-1 flex flex-col w-full max-h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col w-full h-[60vh] md:h-auto md:max-h-[calc(100vh-140px)] min-h-0">
             
             {/* Mobile Tabs for Step 2 */}
             <div className="flex lg:hidden w-full mb-4 liquid-glass rounded-xl p-1 shrink-0">

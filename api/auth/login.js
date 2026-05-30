@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     }
 
     // Generate token
-    const token = jwt.sign({ id: user.id, username: user.username, planStatus: user.planStatus }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, username: user.username, planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId }, JWT_SECRET, {
       expiresIn: '7d',
     });
 
