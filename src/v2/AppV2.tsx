@@ -995,7 +995,7 @@ function AppV2() {
             
             {/* Logo */}
             <div className="w-12 h-12 mb-10 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
-              <img src="/logo_v2.png" alt="Logo" className="w-full h-full object-contain mix-blend-screen" />
+              <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
 
             {/* Nav Icons */}

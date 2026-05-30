@@ -21,7 +21,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]">
-            <img src="/logo_v2.png" alt="Logo" className="w-full h-full object-contain mix-blend-screen" />
+            <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <span className="font-semibold text-xl tracking-tighter text-white">WhatsApp <span className="font-light opacity-50">Bulk</span></span>
         </div>
