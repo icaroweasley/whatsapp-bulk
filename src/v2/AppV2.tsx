@@ -352,7 +352,7 @@ function AppV2() {
     };
   };
 
-  const fetchContacts = async (nameOverride?: string) => {
+  const fetchContacts = async (nameOverride?: string, autoRetry: boolean = false, retryCount: number = 0) => {
     const targetInstance = nameOverride || instanceName;
     if (!baseUrl || !apiKey || !targetInstance) {
       alert('Por favor, certifique-se de que a API está configurada e a instância conectada.');
@@ -494,6 +494,11 @@ function AppV2() {
     } else {
       setAllContacts([]);
       setSelectedAllContacts(new Set());
+      
+      if (autoRetry && retryCount < 5) {
+        setTimeout(() => fetchContacts(nameOverride, true, retryCount + 1), 3000);
+        return; // Retorna cedo sem desativar o isLoadingContacts
+      }
     }
     
     setIsLoadingContacts(false);
@@ -961,7 +966,7 @@ function AppV2() {
         return updated;
       });
 
-      if (allContacts.length === 0) fetchContacts();
+      if (allContacts.length === 0) fetchContacts(undefined, true);
     }
     if (screen === 3) {
       if (targetContacts.length === 0) {
@@ -1102,7 +1107,7 @@ function AppV2() {
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);
-                   if (allContacts.length === 0) fetchContacts(name);
+                   if (allContacts.length === 0) fetchContacts(name, true);
                  }} 
               />
             </div>
