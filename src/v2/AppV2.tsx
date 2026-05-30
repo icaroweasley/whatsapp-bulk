@@ -1138,6 +1138,10 @@ function AppV2() {
                    if (allContacts.length === 0) fetchContacts(name, true);
                  }} 
               />
+              <div className="mt-6 max-w-lg mx-auto text-center text-[12px] text-white/50 bg-black/10 border border-white/5 rounded-2xl p-5 leading-relaxed backdrop-blur-sm">
+                <span className="font-semibold text-white/70 block mb-2 text-sm">Como conectar o dispositivo:</span> 
+                Abra o WhatsApp &gt; clique nos três pontinhos no lado direito superior &gt; Dispositivos Conectados &gt; Conectar Dispositivo &gt; escaneie o código QR
+              </div>
             </div>
           </div>
         )}

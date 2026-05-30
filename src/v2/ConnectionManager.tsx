@@ -248,10 +248,6 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                     <ChevronDown size={20} className="text-white/50" />
                   </div>
                 </div>
-                <div className="mt-4 text-[11px] text-white/50 bg-black/20 border border-white/5 rounded-xl p-4 leading-relaxed">
-                  <span className="font-semibold text-white/70 block mb-1">Como conectar:</span> 
-                  Abra o WhatsApp &gt; clique nos três pontinhos no lado direito superior &gt; Dispositivos Conectados &gt; Conectar Dispositivo &gt; escaneie o código QR
-                </div>
               </>
 
             ) : (
