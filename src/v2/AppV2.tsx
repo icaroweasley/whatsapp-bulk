@@ -991,20 +991,20 @@ function AppV2() {
       <div className="relative z-10 flex h-screen p-4 lg:p-6 w-full max-w-[1600px] mx-auto items-center justify-center">
         
         {/* App Window Shell */}
-        <div className="w-full h-full lg:max-h-[900px] liquid-panel rounded-[2rem] flex overflow-hidden border border-white/10 shadow-2xl relative">
+        <div className="w-full h-full lg:max-h-[900px] liquid-panel rounded-[2rem] flex flex-col md:flex-row overflow-hidden border border-white/10 shadow-2xl relative">
           
           {/* Left Sidebar */}
-          <aside className="w-20 md:w-24 shrink-0 flex flex-col items-center py-6 border-r border-white/5 relative z-20 bg-black/20">
+          <aside className="w-full h-16 md:w-24 md:h-full shrink-0 flex flex-row md:flex-col items-center justify-around md:justify-start px-4 md:px-0 py-0 md:py-6 border-t md:border-t-0 md:border-r border-white/5 relative z-20 bg-black/40 md:bg-black/20 order-last md:order-first">
             {/* Sidebar Gradient Glow */}
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-purple-500/10 via-transparent to-blue-500/10 opacity-50 pointer-events-none"></div>
             
             {/* Logo */}
-            <div className="w-12 h-12 mb-10 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
+            <div className="hidden md:flex w-12 h-12 mb-10 items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] relative z-10">
               <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
 
             {/* Nav Icons */}
-            <nav className="flex-1 w-full flex flex-col items-center gap-6 relative z-10">
+            <nav className="flex-1 w-full flex flex-row md:flex-col items-center justify-around md:justify-start gap-0 md:gap-6 relative z-10">
               <button 
                 onClick={() => setCurrentScreen(1)} 
                 className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
@@ -1137,7 +1137,7 @@ function AppV2() {
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
               
               {/* Left Panel: Fetched Contacts */}
-              <div className={`w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
+              <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'source' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1225,7 +1225,7 @@ function AppV2() {
             </div>
 
             {/* Right Panel: Target List */}
-            <div className={`w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-col p-2 overflow-hidden relative group ${mobileTab === 'target' ? 'flex' : 'hidden lg:flex'}`}>
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               <div className="relative z-10 flex flex-col h-full w-full">
               <div className="p-5 flex flex-col gap-5">
@@ -1359,7 +1359,7 @@ function AppV2() {
           <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
+            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
               <div className="relative z-10 flex flex-col h-full w-full">
@@ -1456,13 +1456,13 @@ function AppV2() {
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
               
               {/* Preview Card */}
-              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
+              <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
                 
                 <div className="relative z-10 flex flex-col h-full w-full">
                   <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4 text-center">Preview da Mensagem</h3>
                 
-                <div className="relative rounded-2xl overflow-hidden min-h-[250px] border border-white/5 shadow-inner bg-[#0f1015]">
+                <div className="relative rounded-2xl overflow-hidden min-h-[250px] border border-white/5 shadow-inner bg-black/40 backdrop-blur-xl">
                   <div className="absolute inset-0 bg-repeat opacity-20 pointer-events-none" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: '400px'}}></div>
                   
                   <div className="relative z-10 p-4 flex flex-col gap-2 h-full">
@@ -1524,7 +1524,7 @@ function AppV2() {
               </div>
 
               {/* Summary Card */}
-              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
+              <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
                 <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4">Resumo do Disparo</h3>
                 <div className="text-7xl font-light tracking-tighter text-white mb-3">
@@ -1573,7 +1573,7 @@ function AppV2() {
               </div>
 
               {/* Activity Console */}
-              <div className="bg-[#111116] border border-white/5 shadow-inner rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
+              <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
                  <div className="px-6 py-5 flex justify-between items-center border-b border-white/5">
                    <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Console de Atividade</span>
                    <button onClick={clearLogs} className="text-[10px] uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors">Limpar</button>
