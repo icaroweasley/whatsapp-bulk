@@ -1032,7 +1032,7 @@ function AppV2() {
             </div>
 
             {/* Nav Icons */}
-            <nav className="flex-1 w-auto md:w-full flex flex-row md:flex-col items-center justify-center md:justify-start gap-6 md:gap-6 relative z-10">
+            <nav className="flex-1 w-auto md:w-full flex flex-row md:flex-col items-center justify-start md:justify-start gap-4 md:gap-6 relative z-10">
               <button 
                 onClick={() => setCurrentScreen(1)} 
                 className={`relative w-16 h-12 rounded-2xl flex items-center justify-center transition-all ${currentScreen === 1 ? 'bg-white/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
@@ -1062,7 +1062,7 @@ function AppV2() {
             </nav>
 
             {/* Bottom Sidebar Actions */}
-            <div className="flex flex-row md:flex-col gap-4 md:mt-auto relative z-10 w-auto md:w-full items-center">
+            <div className="flex flex-row md:flex-col gap-2 md:gap-4 md:mt-auto relative z-10 w-auto md:w-full items-center shrink-0 ml-auto md:ml-0">
               {user?.username === 'karu' && (
                 <button
                   onClick={() => setShowAdmin(true)}
@@ -1121,7 +1121,6 @@ function AppV2() {
             {/* Inner Content Scroller */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
 
-        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
         
         {/* SCREEN 1: CONNECTION */}
         {currentScreen === 1 && (
@@ -1639,6 +1638,8 @@ function AppV2() {
           </div>
         </div>
       </div>
+
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar {

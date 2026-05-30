@@ -245,27 +245,27 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl overflow-y-auto p-4 lg:p-10 font-sans text-white">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="flex items-start md:items-center gap-4">
             <button 
               onClick={onClose}
-              className="w-10 h-10 liquid-glass rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+              className="w-10 h-10 shrink-0 liquid-glass rounded-full flex items-center justify-center hover:bg-white/10 transition-colors mt-1 md:mt-0"
             >
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-                <Users className="text-purple-400" />
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight flex items-center gap-3 mb-1 md:mb-0 leading-tight">
+                <Users className="text-purple-400 shrink-0" />
                 Painel Administrativo
               </h1>
-              <p className="text-white/50">Gerencie as contas dos seus clientes e as instâncias liberadas.</p>
+              <p className="text-white/50 text-sm md:text-base mt-2 md:mt-0 leading-relaxed">Gerencie as contas dos seus clientes e as instâncias liberadas.</p>
             </div>
           </div>
           
           {!isCreating && (
             <button 
               onClick={() => setIsCreating(true)}
-              className="bg-white text-black hover:bg-white/90 rounded-full px-6 py-3 flex items-center gap-2 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all"
+              className="bg-white text-black hover:bg-white/90 rounded-full px-6 py-3 flex items-center gap-2 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all shrink-0 self-start md:self-auto ml-14 md:ml-0"
             >
               <Plus size={18} /> Novo Cliente
             </button>
