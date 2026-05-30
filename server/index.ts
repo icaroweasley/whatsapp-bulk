@@ -427,7 +427,13 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
   }
 
   try {
-    const targetUrl = new URL(targetUrlStr + pathPart);
+    // Força o uso do IP local e da porta correta do container (8081)
+    let urlStr = targetUrlStr;
+    if (urlStr.includes('163.176.37.93:8080') || urlStr.includes('163.176.37.93:8081')) {
+        urlStr = 'http://127.0.0.1:8081';
+    }
+    
+    const targetUrl = new URL(urlStr + pathPart);
     const fetchHeaders: any = { ...req.headers };
     
     delete fetchHeaders['x-target-url'];
