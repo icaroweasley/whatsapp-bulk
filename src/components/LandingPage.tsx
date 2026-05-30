@@ -18,7 +18,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
+      <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 flex items-center justify-center drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]">
             <img src="/logo_v3.png" alt="Logo" className="w-full h-full object-contain" />
@@ -34,7 +34,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-12 pb-20 flex flex-col items-center text-center">
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-4 pb-20 flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-medium uppercase tracking-widest mb-8 backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           Plataforma de Disparo de Mensagens Inteligente
