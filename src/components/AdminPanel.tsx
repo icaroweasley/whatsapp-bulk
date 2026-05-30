@@ -328,11 +328,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         )}
 
         {/* Lista de Clientes */}
-        <div className="liquid-panel rounded-[2rem] border border-white/10 bg-white/5 overflow-hidden shadow-xl">
+        <div className="liquid-panel rounded-[2rem] border border-white/10 bg-white/5 overflow-x-auto shadow-xl custom-scrollbar">
           {isLoading ? (
             <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-white/50" /></div>
           ) : (
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[900px]">
               <thead>
                 <tr className="border-b border-white/10 bg-black/20">
                   <th className="p-6 text-xs font-semibold text-white/50 uppercase tracking-wider">Usuário</th>
