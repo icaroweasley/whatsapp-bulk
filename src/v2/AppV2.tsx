@@ -232,7 +232,7 @@ import AdminPanel from '../components/AdminPanel';
 import { Settings } from 'lucide-react';
 
 function AppV2() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, refreshUser } = useAuth();
   const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   const API_URL = rawUrl.replace(/\/$/, '').replace('163.176.37.93:3001', '163.176.37.93:8080');
   
