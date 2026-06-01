@@ -265,9 +265,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       <div className="liquid-panel rounded-[2rem] p-6 sm:p-8 lg:p-10 relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
         
-        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-6 w-full h-full">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-8 w-full h-full">
           {/* Info Section */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-5 sm:gap-6 w-full xl:w-auto min-w-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5 sm:gap-6 flex-1 min-w-[280px]">
             {/* Avatar / Icon */}
             <div className="relative shrink-0">
               <div className="absolute inset-0 bg-emerald-500/30 blur-xl rounded-full"></div>
@@ -288,36 +288,36 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             </div>
 
             {/* Texts */}
-            <div className="flex flex-col min-w-0 w-full">
-              <h3 className="text-2xl sm:text-xl font-bold text-white tracking-tight mb-2 sm:mb-1 whitespace-nowrap">WhatsApp Conectado</h3>
+            <div className="flex flex-col min-w-0 w-full sm:pt-1">
+              <h3 className="text-2xl sm:text-xl font-bold text-white tracking-tight mb-3 sm:mb-2">WhatsApp Conectado</h3>
               
-              <div className="space-y-1.5 sm:space-y-1 w-full max-w-[280px] sm:max-w-md mx-auto sm:mx-0">
-                <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                   <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full shrink-0">Instância</span>
-                  <span className="text-white font-medium truncate">{instanceName}</span>
-                </p>
+                  <span className="text-sm text-white font-medium truncate max-w-[200px]">{instanceName}</span>
+                </div>
                 
                 {instanceInfo?.ownerJid && (
-                  <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                     <span className="uppercase text-[10px] tracking-wider font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full shrink-0">Número</span>
-                    <span className="text-white font-medium truncate">
+                    <span className="text-sm text-white font-medium truncate max-w-[200px]">
                       +{instanceInfo.ownerJid.split('@')[0]}
                     </span>
-                  </p>
+                  </div>
                 )}
                 
                 {instanceInfo?.profileName && (
-                  <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                     <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full shrink-0">Nome</span>
-                    <span className="text-white font-medium truncate">{instanceInfo.profileName}</span>
-                  </p>
+                    <span className="text-sm text-white font-medium truncate max-w-[200px]">{instanceInfo.profileName}</span>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto shrink-0 mt-2 xl:mt-0">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto shrink-0 justify-center">
             <button 
               onClick={() => {
                 if(onDisconnect) onDisconnect();
@@ -326,7 +326,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                 setQrCodeBase64(null);
                 setPairingCode(null);
               }}
-              className="w-full sm:w-auto liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 rounded-2xl sm:rounded-full px-6 py-4 sm:py-3.5 text-sm font-medium order-2 sm:order-1"
+              className="w-full sm:w-auto liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 rounded-2xl sm:rounded-full px-6 py-4 sm:py-3.5 text-sm font-medium"
             >
               <LogOut size={18} className="sm:w-4 sm:h-4" />
               <span>Desconectar</span>
@@ -337,9 +337,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                 if (onConnect) onConnect(instanceName);
                 if (onConnected) onConnected(instanceName);
               }}
-              className="w-full sm:w-auto bg-white text-black hover:bg-white/90 rounded-2xl sm:rounded-full px-8 py-4 sm:py-3.5 flex items-center justify-center gap-3 transition-all font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 order-1 sm:order-2 text-base sm:text-sm"
+              className="w-full sm:w-auto bg-white text-black hover:bg-white/90 rounded-2xl sm:rounded-full px-8 py-4 sm:py-3.5 flex items-center justify-center gap-3 transition-all font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 text-base sm:text-sm whitespace-nowrap"
             >
-              <span className="whitespace-nowrap">Avançar para Envios</span>
+              <span>Avançar para Envios</span>
             </button>
           </div>
         </div>
