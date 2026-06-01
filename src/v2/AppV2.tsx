@@ -465,7 +465,13 @@ function AppV2() {
           }
         }
         
-        const pushName = c.pushName || c.name || (c.lastMessage?.pushName);
+        let pushName = c.pushName || c.name;
+        if (!pushName && c.lastMessage?.pushName && !['Você', 'You'].includes(c.lastMessage.pushName)) {
+           // Ignora se for apenas números
+           if (!/^\d+$/.test(c.lastMessage.pushName)) {
+             pushName = c.lastMessage.pushName;
+           }
+        }
         
         return {
           id: rawId,
@@ -476,9 +482,15 @@ function AppV2() {
         };
       }).filter((c: Contact) => {
         if (!c.number) return false;
+        
+        // Regra do usuário: apenas números que começam com 55 (Brasil)
+        if (!c.number.startsWith('55')) return false;
+        
         const lowerId = String(c.id).toLowerCase();
-        if (lowerId.includes('g.us') || lowerId.includes('broadcast')) return false;
-        return c.number.length >= 8;
+        if (lowerId.includes('g.us') || lowerId.includes('broadcast') || lowerId.includes('lid')) return false;
+        
+        // Número BR tem no mínimo 12 dígitos: 55 + 2 (DDD) + 8 dígitos
+        return c.number.length >= 12;
       });
 
       // Remove duplicatas e mescla os dados para não perder nomes (ex: Chat sem 'name' sobrescrevendo Contact com 'name')
