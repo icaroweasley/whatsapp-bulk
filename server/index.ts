@@ -65,7 +65,25 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const usage = await prisma.dailyUsage.findUnique({
+      where: { userId_date: { userId: user.id, date: today } }
+    });
+
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        instances: instancesArray, 
+        planStatus: user.planStatus, 
+        customPrice: user.customPrice, 
+        planExpiresAt: user.planExpiresAt, 
+        mpCustomerId: user.mpCustomerId,
+        messagesSentToday: usage ? usage.messageCount : 0
+      } 
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor' });
   }
@@ -102,7 +120,19 @@ app.post('/api/auth/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({ token, user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
+    res.status(201).json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        instances: instancesArray, 
+        planStatus: user.planStatus, 
+        customPrice: user.customPrice, 
+        planExpiresAt: user.planExpiresAt, 
+        mpCustomerId: user.mpCustomerId,
+        messagesSentToday: 0
+      } 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro no servidor' });
@@ -281,7 +311,25 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res: any) => {
     }
 
     const instancesArray = (user.instances || '').split(',').map(s => s.trim()).filter(Boolean);
-    res.json({ user: { id: user.id, username: user.username, instances: instancesArray, planStatus: user.planStatus, customPrice: user.customPrice, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId } });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const usage = await prisma.dailyUsage.findUnique({
+      where: { userId_date: { userId: user.id, date: today } }
+    });
+
+    res.json({ 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        instances: instancesArray, 
+        planStatus: user.planStatus, 
+        customPrice: user.customPrice, 
+        planExpiresAt: user.planExpiresAt, 
+        mpCustomerId: user.mpCustomerId,
+        messagesSentToday: usage ? usage.messageCount : 0
+      } 
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor' });
   }
