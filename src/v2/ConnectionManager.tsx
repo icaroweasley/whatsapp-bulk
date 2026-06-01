@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QrCode, CheckCircle2, Loader2, LogOut, ChevronDown } from 'lucide-react';
+import { QrCode, CheckCircle2, Loader2, LogOut, ChevronDown, Smartphone } from 'lucide-react';
 
 interface ConnectionManagerProps {
   onConnect?: (instanceName: string) => void;
@@ -18,6 +18,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'creating' | 'waiting_qr' | 'connected' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [connectionMethod, setConnectionMethod] = useState<'qrcode' | 'phone'>('qrcode');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
 
   const baseUrl = import.meta.env.VITE_EVOLUTION_URL;
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY;
@@ -95,6 +98,16 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       setErrorMsg('Variáveis de ambiente (VITE_EVOLUTION_URL ou API_KEY) não configuradas no seu .env');
       return;
     }
+    
+    let formattedNumber = undefined;
+    if (connectionMethod === 'phone') {
+      const cleanNumber = phoneNumber.replace(/\D/g, '');
+      if (cleanNumber.length < 11) {
+        setErrorMsg('Por favor, insira um número válido com DDI e DDD (ex: 5511999999999)');
+        return;
+      }
+      formattedNumber = cleanNumber;
+    }
 
     setStatus('creating');
     setErrorMsg('');
@@ -137,6 +150,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         body: JSON.stringify({
           instanceName: instanceName.trim(),
           qrcode: true,
+          number: formattedNumber,
           integration: "WHATSAPP-BAILEYS"
         })
       });
@@ -157,6 +171,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         setStatus('waiting_qr');
         startPolling(instanceName.trim());
       } else {
+        setStatus('waiting_qr');
         startPolling(instanceName.trim());
       }
 
@@ -211,6 +226,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           } else if (qrData?.qrcode?.base64) {
             setQrCodeBase64(qrData.qrcode.base64);
           }
+          if (qrData?.pairingCode) {
+            setPairingCode(qrData.pairingCode);
+          }
         }
 
       } catch (e) {
@@ -262,6 +280,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
               setStatus('idle');
               setInstanceName('');
               setQrCodeBase64(null);
+              setPairingCode(null);
             }}
             className="flex-1 sm:flex-none liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium"
           >
@@ -281,6 +300,23 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       
       {status === 'idle' || status === 'error' ? (
         <div className="space-y-6">
+          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+            <button
+              onClick={() => setConnectionMethod('qrcode')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${connectionMethod === 'qrcode' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+            >
+              <QrCode size={18} />
+              QR Code
+            </button>
+            <button
+              onClick={() => setConnectionMethod('phone')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${connectionMethod === 'phone' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+            >
+              <Smartphone size={18} />
+              Telefone
+            </button>
+          </div>
+
           {errorMsg && (
             <div className="p-4 liquid-glass border border-red-500/30 bg-red-500/10 text-red-200 rounded-2xl text-sm">
               {errorMsg}
@@ -317,6 +353,20 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
               />
             )}
           </div>
+
+          {connectionMethod === 'phone' && (
+            <div>
+              <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Número do WhatsApp</label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Ex: 5511999999999"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg"
+              />
+              <p className="text-xs text-white/40 mt-2 ml-1">Insira o código do país (55 para Brasil) + DDD + número.</p>
+            </div>
+          )}
           
           <button
             onClick={createInstance}
@@ -324,7 +374,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             className="w-full bg-white text-black hover:bg-white/90 font-semibold py-4 rounded-full transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
           >
             {isCheckingState ? <Loader2 size={18} className="animate-spin" /> : null}
-            Gerar QR Code para Conectar
+            {connectionMethod === 'qrcode' ? 'Gerar QR Code para Conectar' : 'Gerar Código de Pareamento'}
           </button>
         </div>
       ) : null}
@@ -336,14 +386,16 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         </div>
       )}
 
-      {status === 'waiting_qr' && !qrCodeBase64 && (
+      {status === 'waiting_qr' && !qrCodeBase64 && !pairingCode && (
         <div className="flex flex-col items-center justify-center py-10 space-y-4">
           <Loader2 className="w-10 h-10 text-white/80 animate-spin" />
-          <p className="text-white/60 font-medium tracking-wide">Gerando QR Code na VPS, aguarde...</p>
+          <p className="text-white/60 font-medium tracking-wide">
+            {connectionMethod === 'qrcode' ? 'Gerando QR Code na VPS, aguarde...' : 'Gerando Código de Pareamento, aguarde...'}
+          </p>
         </div>
       )}
 
-      {status === 'waiting_qr' && qrCodeBase64 && (
+      {status === 'waiting_qr' && connectionMethod === 'qrcode' && qrCodeBase64 && (
         <div className="flex flex-col items-center justify-center space-y-8">
           <div className="p-6 liquid-glass-strong border border-white/20 rounded-3xl relative overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
@@ -358,6 +410,26 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div className="flex items-center gap-3 text-white/70 liquid-glass px-6 py-3 rounded-full text-sm font-medium border border-white/10">
             <Loader2 className="w-4 h-4 animate-spin" />
             Aguardando leitura do celular...
+          </div>
+        </div>
+      )}
+
+      {status === 'waiting_qr' && connectionMethod === 'phone' && pairingCode && (
+        <div className="flex flex-col items-center justify-center space-y-8">
+          <div className="p-8 liquid-glass-strong border border-white/20 rounded-3xl relative overflow-hidden w-full max-w-sm text-center">
+             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
+             <p className="text-white/60 font-medium text-sm mb-4 uppercase tracking-widest">Código de Pareamento</p>
+             <h2 className="text-5xl font-bold tracking-[0.2em] text-white relative z-10">{pairingCode}</h2>
+          </div>
+          <div className="text-center space-y-3">
+            <h3 className="font-semibold text-white text-xl tracking-tight">Insira o código no celular</h3>
+            <p className="text-sm text-white/50 max-w-sm mx-auto leading-relaxed">
+              Vá em <strong>Aparelhos Conectados &gt; Conectar um Aparelho &gt; Conectar com número de telefone</strong> no seu WhatsApp e digite o código acima.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 text-white/70 liquid-glass px-6 py-3 rounded-full text-sm font-medium border border-white/10">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Aguardando vinculação no celular...
           </div>
         </div>
       )}
