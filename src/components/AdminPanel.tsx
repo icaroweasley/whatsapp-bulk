@@ -88,7 +88,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           'x-target-url': API_URL
         },
         body: JSON.stringify({ 
-          username: newUsername, 
+          username: newUsername.trim(), 
           password: newPassword, 
           instances: newInstances 
         })
