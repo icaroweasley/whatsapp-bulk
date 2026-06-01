@@ -319,7 +319,21 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto shrink-0 justify-center">
             <button 
-              onClick={() => {
+              onClick={async () => {
+                try {
+                  const targetUrl = cleanUrl(baseUrl);
+                  // 1. Desconecta o WhatsApp
+                  await fetch(`/api-proxy/instance/logout/${instanceName}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                  });
+                  // 2. Remove a instância do Evolution API para limpeza
+                  await fetch(`/api-proxy/instance/delete/${instanceName}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                  });
+                } catch(e) {}
+
                 if(onDisconnect) onDisconnect();
                 setStatus('idle');
                 setInstanceName('');
