@@ -766,6 +766,10 @@ function AppV2() {
       alert('Digite uma mensagem ou anexe uma mídia para enviar.');
       return;
     }
+    if (user?.messagesSentToday && user.messagesSentToday >= 1000) {
+      alert('Aviso: O seu limite diário de 1.000 mensagens foi atingido. Você não pode realizar novos disparos hoje.');
+      return;
+    }
 
     setIsSending(true);
     setIsPausedUI(false);
@@ -929,6 +933,12 @@ function AppV2() {
         } else {
            setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
            addLog(`Erro ao enviar para ${contact.number}: ${contactErrorMsg}`, 'error');
+           
+           if (contactErrorMsg.includes('Limite diário')) {
+              addLog(`Disparo interrompido: Cota de mensagens atingida.`, 'error');
+              alert('O disparo foi interrompido porque você atingiu o limite diário de 1.000 mensagens.');
+              break;
+           }
         }
       } catch (error) {
         setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
@@ -1030,6 +1040,12 @@ function AppV2() {
                   </span>
                 </div>
               )}
+              <div className="flex flex-col items-end mr-1">
+                <span className="text-[9px] text-white/50 uppercase font-semibold">Hoje</span>
+                <span className={`text-xs font-bold ${user?.messagesSentToday && user.messagesSentToday >= 1000 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {user?.messagesSentToday || 0}/1000
+                </span>
+              </div>
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden">
                  {user?.username?.substring(0, 2)}
               </div>
@@ -1123,6 +1139,12 @@ function AppV2() {
                     </span>
                   </div>
                 )}
+                <div className="flex flex-col items-end mr-4">
+                  <span className="text-[10px] text-white/50 uppercase font-semibold">Cota Hoje</span>
+                  <span className={`text-sm font-bold ${user?.messagesSentToday && user.messagesSentToday >= 1000 ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {user?.messagesSentToday || 0} / 1000
+                  </span>
+                </div>
                 <div className="flex items-center gap-3 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden">
                      {user?.username?.substring(0, 2)}

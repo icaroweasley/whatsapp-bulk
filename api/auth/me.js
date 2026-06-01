@@ -39,13 +39,29 @@ export default async function handler(req, res) {
 
     const instancesArray = user.instances ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+    // Checa a cota diária
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const usage = await prisma.dailyUsage.findUnique({
+      where: {
+        userId_date: {
+          userId: user.id,
+          date: today
+        }
+      }
+    });
+
     Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
     return res.status(200).json({ 
       user: { 
         id: user.id, 
         username: user.username, 
         instances: instancesArray, 
-        planStatus: user.planStatus, planExpiresAt: user.planExpiresAt, mpCustomerId: user.mpCustomerId 
+        planStatus: user.planStatus, 
+        planExpiresAt: user.planExpiresAt, 
+        mpCustomerId: user.mpCustomerId,
+        messagesSentToday: usage ? usage.messageCount : 0
       } 
     });
   } catch (error) {

@@ -74,6 +74,13 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
       return;
     }
 
+    // @ts-ignore
+    const authUser = JSON.parse(localStorage.getItem('evo_user') || '{}');
+    if (authUser?.messagesSentToday && authUser.messagesSentToday >= 1000) {
+      alert('Aviso: O seu limite diário de 1.000 mensagens foi atingido. Você não pode realizar novos disparos hoje.');
+      return;
+    }
+
     setIsSending(true);
     setIsPausedUI(false);
     isPausedRef.current = false;
@@ -151,6 +158,12 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
            const errData = await response.text();
            currentContacts[i] = { ...contact, status: 'error' };
            addLog(`Erro ao enviar para ${contact.number}: ${errData.substring(0, 50)}`, 'error');
+           
+           if (errData.includes('Limite diário')) {
+              addLog(`Disparo interrompido: Cota de mensagens atingida.`, 'error');
+              alert('O disparo foi interrompido porque você atingiu o limite diário de 1.000 mensagens.');
+              break;
+           }
         }
       } catch (error: any) {
         currentContacts[i] = { ...contact, status: 'error' };

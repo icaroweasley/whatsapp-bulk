@@ -8,6 +8,7 @@ interface User {
   customPrice?: number | null;
   planExpiresAt?: string | null;
   mpCustomerId?: string | null;
+  messagesSentToday?: number;
 }
 
 interface AuthContextType {

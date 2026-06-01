@@ -587,6 +587,13 @@ function AppV1() {
       return;
     }
 
+    // @ts-ignore
+    const authUser = JSON.parse(localStorage.getItem('evo_user') || '{}');
+    if (authUser?.messagesSentToday && authUser.messagesSentToday >= 1000) {
+      alert('Aviso: O seu limite diário de 1.000 mensagens foi atingido. Você não pode realizar novos disparos hoje.');
+      return;
+    }
+
     setIsSending(true);
     setIsPausedUI(false);
     isPausedRef.current = false;
@@ -737,6 +744,12 @@ function AppV1() {
         } else {
            setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
            addLog(`Erro ao enviar para ${contact.number}: ${contactErrorMsg}`, 'error');
+           
+           if (contactErrorMsg.includes('Limite diário')) {
+              addLog(`Disparo interrompido: Cota de mensagens atingida.`, 'error');
+              alert('O disparo foi interrompido porque você atingiu o limite diário de 1.000 mensagens.');
+              break;
+           }
         }
       } catch (error) {
         setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
