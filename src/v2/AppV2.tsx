@@ -445,24 +445,14 @@ function AppV2() {
 
         return true;
       }).map((c: any) => {
-        // Tática de caça: transforma o contato inteiro em texto e acha o número real
-        const cString = JSON.stringify(c);
-        const match = cString.match(/\b(55\d{10,11})\b/);
-        
         let actualNumber = '';
-        let rawId = '';
-
-        if (match) {
-          actualNumber = match[1];
-          rawId = actualNumber + '@s.whatsapp.net';
-        } else {
-          rawId = c.id || c.remoteJid || c.number || '';
-          actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
-          actualNumber = actualNumber.replace(/\D/g, '');
-          
-          if (typeof rawId === 'string' && !rawId.includes('@') && actualNumber.length >= 14 && !actualNumber.startsWith('55')) {
-            rawId = actualNumber + '@lid';
-          }
+        let rawId = c.id || c.remoteJid || c.number || '';
+        
+        actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
+        actualNumber = actualNumber.replace(/\D/g, '');
+        
+        if (typeof rawId === 'string' && !rawId.includes('@') && actualNumber.length >= 14 && !actualNumber.startsWith('55')) {
+          rawId = actualNumber + '@lid';
         }
         
         let pushName = c.pushName || c.name;
