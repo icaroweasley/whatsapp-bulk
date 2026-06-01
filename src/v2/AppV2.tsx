@@ -446,7 +446,7 @@ function AppV2() {
         return true;
       }).map((c: any) => {
         let actualNumber = '';
-        let rawId = c.id || c.remoteJid || c.number || '';
+        let rawId = c.remoteJid || c.id || c.number || '';
         
         actualNumber = typeof rawId === 'string' ? rawId.split('@')[0] : String(rawId);
         actualNumber = actualNumber.replace(/\D/g, '');
