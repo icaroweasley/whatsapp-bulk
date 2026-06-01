@@ -455,7 +455,7 @@ function AppV2() {
           rawId = actualNumber + '@lid';
         }
         
-        let pushName = c.pushName || c.name;
+        let pushName = c.pushName || c.name || c.verifiedName;
         if (!pushName && c.lastMessage?.pushName && !['Você', 'You'].includes(c.lastMessage.pushName)) {
            // Ignora se for apenas números
            if (!/^\d+$/.test(c.lastMessage.pushName)) {
