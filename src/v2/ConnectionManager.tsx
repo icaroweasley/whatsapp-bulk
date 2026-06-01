@@ -70,6 +70,22 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           } else {
             if (status === 'connected') setStatus('idle');
             setInstanceInfo(null);
+            
+            // Auto-fallback: se a atual está fechada, busca se tem alguma aberta
+            const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
+                headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+            });
+            if(fetchRes.ok){
+               const allInstances = await fetchRes.json();
+               const openInstance = allInstances.find((i: any) => i.connectionStatus === 'open' || i.instance?.state === 'open');
+               if(openInstance) {
+                   const openName = openInstance.name || openInstance.instance?.instanceName;
+                   if (openName && openName !== instanceName) {
+                       setInstanceName(openName);
+                       if (onConnected) onConnected(openName);
+                   }
+               }
+            }
           }
         }
       } catch (e) {
