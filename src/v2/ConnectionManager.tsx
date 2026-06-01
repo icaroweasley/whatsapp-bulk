@@ -265,9 +265,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       <div className="liquid-panel rounded-[2rem] p-6 sm:p-8 lg:p-10 relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 w-full h-full">
+        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-6 w-full h-full">
           {/* Info Section */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center text-center sm:text-left gap-5 sm:gap-6 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-5 sm:gap-6 w-full xl:w-auto min-w-0">
             {/* Avatar / Icon */}
             <div className="relative shrink-0">
               <div className="absolute inset-0 bg-emerald-500/30 blur-xl rounded-full"></div>
@@ -279,7 +279,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                 />
               ) : (
                 <div className="w-20 h-20 sm:w-16 sm:h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 border-2 border-emerald-500/50 relative z-10 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                  <CheckCircle2 size={32} className="sm:w-8 sm:h-8 w-10 h-10" />
+                  <CheckCircle2 size={32} className="w-10 h-10 sm:w-8 sm:h-8" />
                 </div>
               )}
               <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-black z-20">
@@ -288,18 +288,18 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             </div>
 
             {/* Texts */}
-            <div className="flex flex-col min-w-0 flex-1">
-              <h3 className="text-2xl sm:text-xl font-bold text-white tracking-tight mb-1">WhatsApp Conectado</h3>
+            <div className="flex flex-col min-w-0 w-full">
+              <h3 className="text-2xl sm:text-xl font-bold text-white tracking-tight mb-2 sm:mb-1 whitespace-nowrap">WhatsApp Conectado</h3>
               
-              <div className="space-y-1 mt-2 sm:mt-1">
-                <p className="text-sm text-white/60 flex items-center justify-center sm:justify-start gap-2">
-                  <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full">Instância</span>
+              <div className="space-y-1.5 sm:space-y-1 w-full max-w-[280px] sm:max-w-md mx-auto sm:mx-0">
+                <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+                  <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full shrink-0">Instância</span>
                   <span className="text-white font-medium truncate">{instanceName}</span>
                 </p>
                 
                 {instanceInfo?.ownerJid && (
-                  <p className="text-sm text-white/60 flex items-center justify-center sm:justify-start gap-2">
-                    <span className="uppercase text-[10px] tracking-wider font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">Número</span>
+                  <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+                    <span className="uppercase text-[10px] tracking-wider font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full shrink-0">Número</span>
                     <span className="text-white font-medium truncate">
                       +{instanceInfo.ownerJid.split('@')[0]}
                     </span>
@@ -307,8 +307,8 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                 )}
                 
                 {instanceInfo?.profileName && (
-                  <p className="text-sm text-white/60 flex items-center justify-center sm:justify-start gap-2">
-                    <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full">Nome</span>
+                  <p className="text-sm text-white/60 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2">
+                    <span className="uppercase text-[10px] tracking-wider font-semibold bg-white/10 px-2 py-0.5 rounded-full shrink-0">Nome</span>
                     <span className="text-white font-medium truncate">{instanceInfo.profileName}</span>
                   </p>
                 )}
@@ -317,7 +317,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
+          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto shrink-0 mt-2 xl:mt-0">
             <button 
               onClick={() => {
                 if(onDisconnect) onDisconnect();
@@ -339,7 +339,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
               }}
               className="w-full sm:w-auto bg-white text-black hover:bg-white/90 rounded-2xl sm:rounded-full px-8 py-4 sm:py-3.5 flex items-center justify-center gap-3 transition-all font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 order-1 sm:order-2 text-base sm:text-sm"
             >
-              <span>Avançar para Envios</span>
+              <span className="whitespace-nowrap">Avançar para Envios</span>
             </button>
           </div>
         </div>
