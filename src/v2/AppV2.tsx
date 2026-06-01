@@ -973,6 +973,11 @@ function AppV2() {
 
     addLog(`Disparo concluído! ${sentCount} mensagens enviadas.`, 'success');
     setIsSending(false);
+    
+    // Atualiza a cota na tela do usuário
+    if (refreshUser) {
+      await refreshUser();
+    }
   };
 
   const nextScreen = (screen: 1 | 2 | 3) => {

@@ -28,7 +28,7 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
   const [isSending, setIsSending] = useState(false);
   const [isPausedUI, setIsPausedUI] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const { token } = useAuth();
+  const { token, refreshUser } = useAuth();
   
   // Anti-ban configs
   const [minDelay, setMinDelay] = useState(15);
@@ -201,6 +201,10 @@ export default function BulkSender({ instanceName, targetContacts, onUpdateConta
 
     addLog(`Disparo concluído! ${sentCount} mensagens enviadas.`, 'success');
     setIsSending(false);
+
+    if (refreshUser) {
+      await refreshUser();
+    }
   };
 
   return (
