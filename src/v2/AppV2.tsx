@@ -394,8 +394,9 @@ function AppV2() {
     let success = false;
     let mergedRawData: any[] = [];
 
-    // Helper para tentar buscar de uma lista de endpoints (pega o primeiro que funcionar)
-    const tryFetch = async (endpoints: any[]) => {
+    // Helper para tentar buscar de uma lista de endpoints (pega todos e junta)
+    const fetchAllAndMerge = async (endpoints: any[]) => {
+      let mergedList: any[] = [];
       for (const endpoint of endpoints) {
         try {
           const fetchOptions: RequestInit = {
@@ -411,18 +412,20 @@ function AppV2() {
             try {
               const data = JSON.parse(textResponse);
               const list = Array.isArray(data) ? data : (data.contacts || data.chats || data.data || []);
-              if (list.length > 0) return list;
+              if (list.length > 0) {
+                mergedList = [...mergedList, ...list];
+              }
             } catch (err) {}
           }
         } catch (error) {}
       }
-      return [];
+      return mergedList;
     };
 
     // Busca contatos e chats simultaneamente
     const [contactsData, chatsData] = await Promise.all([
-      tryFetch(endpointsContacts),
-      tryFetch(endpointsChats)
+      fetchAllAndMerge(endpointsContacts),
+      fetchAllAndMerge(endpointsChats)
     ]);
 
     mergedRawData = [...contactsData, ...chatsData];
@@ -435,8 +438,10 @@ function AppV2() {
         if (realInstanceId && c.instanceId && c.instanceId !== realInstanceId) return false;
         
         // Filtro estrito contra GRUPOS antes do parse
-        const cid = String(c.id || c.remoteJid || '').toLowerCase();
-        if (cid.includes('g.us') || cid.includes('broadcast')) return false;
+        const remoteJid = String(c.remoteJid || '').toLowerCase();
+        const contactId = String(c.id || '').toLowerCase();
+        if (remoteJid.includes('g.us') || contactId.includes('g.us')) return false;
+        if (remoteJid.includes('broadcast') || contactId.includes('broadcast')) return false;
 
         return true;
       }).map((c: any) => {
@@ -460,9 +465,11 @@ function AppV2() {
           }
         }
         
+        const pushName = c.pushName || c.name || (c.lastMessage?.pushName);
+        
         return {
           id: rawId,
-          pushName: c.pushName,
+          pushName: pushName,
           name: c.name,
           number: actualNumber,
           status: 'pending' as 'pending'
