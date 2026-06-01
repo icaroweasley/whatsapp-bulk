@@ -29,6 +29,57 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
     }
   }, [connectedInstance]);
 
+  const [instanceInfo, setInstanceInfo] = useState<any>(null);
+  const [isCheckingState, setIsCheckingState] = useState(false);
+
+  useEffect(() => {
+    if (!instanceName || !baseUrl || !apiKey || status === 'creating' || status === 'waiting_qr') return;
+    
+    let isMounted = true;
+
+    const checkState = async () => {
+      setIsCheckingState(true);
+      try {
+        const targetUrl = cleanUrl(baseUrl);
+        const res = await fetch(`/api-proxy/instance/connectionState/${instanceName}`, {
+          method: 'GET',
+          headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+        });
+        
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          const state = data?.instance?.state || data?.state;
+          
+          if (state === 'open' || state === 'connected' || state === 'CONNECTED') {
+            setStatus('connected');
+            
+            // Try to get phone number
+            const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
+                headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+            });
+            if(fetchRes.ok){
+               const allInstances = await fetchRes.json();
+               const myInstance = allInstances.find((i: any) => i.name === instanceName || i.instance?.instanceName === instanceName);
+               if(myInstance) {
+                   setInstanceInfo(myInstance);
+               }
+            }
+          } else {
+            if (status === 'connected') setStatus('idle');
+            setInstanceInfo(null);
+          }
+        }
+      } catch (e) {
+      } finally {
+        if (isMounted) setIsCheckingState(false);
+      }
+    };
+    
+    checkState();
+    
+    return () => { isMounted = false; };
+  }, [instanceName, baseUrl, apiKey]);
+
   const cleanUrl = (url: string) => {
     let clean = url?.trim().replace(/\/$/, '') || '';
     if (clean && !clean.startsWith('http')) clean = 'https://' + clean;
@@ -187,6 +238,12 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div>
             <h3 className="text-xl font-medium text-white tracking-tight">WhatsApp Conectado</h3>
             <p className="text-sm text-white/50 mt-1">Instância vinculada: <span className="text-white font-medium">{instanceName}</span></p>
+            {instanceInfo?.ownerJid && (
+              <p className="text-sm text-white/50 mt-1">
+                Número: <span className="text-white font-medium">+{instanceInfo.ownerJid.split('@')[0]}</span>
+                {instanceInfo.profileName && ` (${instanceInfo.profileName})`}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex gap-4 w-full sm:w-auto">
@@ -263,8 +320,10 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           
           <button
             onClick={createInstance}
-            className="w-full bg-white text-black hover:bg-white/90 font-semibold py-4 rounded-full transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02]"
+            disabled={isCheckingState}
+            className="w-full bg-white text-black hover:bg-white/90 font-semibold py-4 rounded-full transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
           >
+            {isCheckingState ? <Loader2 size={18} className="animate-spin" /> : null}
             Gerar QR Code para Conectar
           </button>
         </div>
