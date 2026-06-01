@@ -50,6 +50,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [editCustomPrice, setEditCustomPrice] = useState('');
   const [isEditingPlan, setIsEditingPlan] = useState(false);
 
+  // Edit Password State
+  const [editingPasswordFor, setEditingPasswordFor] = useState<UserItem | null>(null);
+  const [newAdminUserPassword, setNewAdminUserPassword] = useState('');
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -423,6 +428,16 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                       >
                         <Settings size={16} />
                       </button>
+                      <button 
+                        onClick={() => {
+                          setEditingPasswordFor(u);
+                          setNewAdminUserPassword('');
+                        }}
+                        className="w-8 h-8 rounded-full bg-yellow-500/10 text-yellow-400 flex items-center justify-center hover:bg-yellow-500/20 transition-colors"
+                        title="Alterar Senha"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </button>
                       {u.username !== 'karu' ? (
                         <button 
                           onClick={() => handleDeleteUser(u.id, u.username)}
@@ -726,6 +741,85 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 >
                   {isEditingPlan ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                   Salvar Configurações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Password Modal */}
+      {editingPasswordFor && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="liquid-panel rounded-[2rem] p-8 border border-white/10 bg-black/60 max-w-md w-full shadow-2xl relative z-50">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2 text-yellow-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              Alterar Senha do Cliente
+            </h3>
+            <div className="text-sm text-white/70 mb-6 leading-relaxed">
+              Você está definindo uma nova senha para o cliente <strong className="text-white">@{editingPasswordFor.username}</strong>.
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (newAdminUserPassword.length < 6) {
+                alert("A nova senha deve ter no mínimo 6 caracteres.");
+                return;
+              }
+              setIsEditingPassword(true);
+              try {
+                const res = await fetch(`/api/admin/users/${editingPasswordFor.id}/password`, {
+                  method: 'PUT',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ 
+                    newPassword: newAdminUserPassword
+                  })
+                });
+
+                if (res.ok) {
+                  alert(`Senha alterada com sucesso para ${newAdminUserPassword}`);
+                  setEditingPasswordFor(null);
+                } else {
+                  const data = await res.json();
+                  alert(data.error || "Erro ao alterar a senha.");
+                }
+              } catch (e) {
+                alert("Erro de conexão.");
+              } finally {
+                setIsEditingPassword(false);
+              }
+            }}>
+              
+              <div className="mb-6">
+                <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Nova Senha</label>
+                <input
+                  type="text"
+                  value={newAdminUserPassword}
+                  onChange={e => setNewAdminUserPassword(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium"
+                  placeholder="Mínimo de 6 caracteres"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingPasswordFor(null)}
+                  className="liquid-glass border border-white/10 text-white rounded-full px-6 py-3 font-semibold transition-colors hover:bg-white/10"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isEditingPassword}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black rounded-full px-8 py-3 flex items-center gap-2 font-semibold transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)] disabled:opacity-50"
+                >
+                  {isEditingPassword ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  Salvar Nova Senha
                 </button>
               </div>
             </form>

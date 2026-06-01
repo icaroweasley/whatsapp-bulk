@@ -229,6 +229,30 @@ app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
 });
 
 
+// Admin: Reset User Password
+app.put('/api/admin/users/:id/password', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
+    });
+
+    res.json({ message: 'Senha atualizada com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao redefinir a senha do usuário.' });
+  }
+});
+
+
 // Get User's Lists
 app.get('/api/lists', authenticateToken, async (req: any, res: any) => {
   try {
