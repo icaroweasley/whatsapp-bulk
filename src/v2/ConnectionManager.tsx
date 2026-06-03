@@ -23,7 +23,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   }, [instanceName, instances]);
 
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'creating' | 'waiting_qr' | 'connected' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'creating' | 'waiting_qr' | 'connected' | 'error' | 'loading'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [connectionMethod, setConnectionMethod] = useState<'qrcode' | 'phone'>('qrcode');
   const [phoneNumber, setPhoneNumber] = useState('');

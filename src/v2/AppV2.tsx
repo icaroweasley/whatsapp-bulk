@@ -246,11 +246,11 @@ function AppV2() {
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
-    const instancesArray = user?.instances ? (typeof user.instances === 'string' ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : user.instances) : [];
-    if (loaded && instancesArray.includes(loaded)) {
+    const instancesArray = user?.instances ? (typeof user.instances === 'string' ? (user.instances as string).split(',').map((s: string) => s.trim()).filter(Boolean) : user.instances) : [];
+    if (loaded && (instancesArray as string[]).includes(loaded)) {
       return loaded;
     }
-    return instancesArray[0] || '';
+    return (instancesArray as string[])[0] || '';
   });
   const [savedInstances, setSavedInstances] = useState<SavedInstance[]>(() => {
     const loaded = localStorage.getItem(`evolution_saved_instances_${user?.username || 'default'}`);
