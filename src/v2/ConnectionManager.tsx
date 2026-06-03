@@ -205,14 +205,17 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
 
       const data = await response.json();
       
+      if (data?.pairingCode) setPairingCode(data.pairingCode);
+      else if (data?.hash?.pairingCode) setPairingCode(data.hash.pairingCode);
+      else if (data?.qrcode?.pairingCode) setPairingCode(data.qrcode.pairingCode);
+      else if (data?.code) setPairingCode(data.code);
+      
       if (data.qrcode && data.qrcode.base64) {
         setQrCodeBase64(data.qrcode.base64);
-        setStatus('waiting_qr');
-        startPolling(instanceName.trim());
-      } else {
-        setStatus('waiting_qr');
-        startPolling(instanceName.trim());
       }
+      
+      setStatus('waiting_qr');
+      startPolling(instanceName.trim());
 
     } catch (err: any) {
       console.error(err);
@@ -267,6 +270,8 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           }
           if (qrData?.pairingCode) {
             setPairingCode(qrData.pairingCode);
+          } else if (qrData?.code) {
+            setPairingCode(qrData.code);
           }
         }
 
@@ -477,11 +482,13 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         </div>
       )}
 
-      {status === 'waiting_qr' && !qrCodeBase64 && !pairingCode && (
+      {status === 'waiting_qr' && 
+        ((connectionMethod === 'qrcode' && !qrCodeBase64) || 
+         (connectionMethod === 'phone' && !pairingCode)) && (
         <div className="flex flex-col items-center justify-center py-10 space-y-4">
           <Loader2 className="w-10 h-10 text-white/80 animate-spin" />
           <p className="text-white/60 font-medium tracking-wide">
-            {connectionMethod === 'qrcode' ? 'Gerando QR Code na VPS, aguarde...' : 'Gerando Código de Pareamento, aguarde...'}
+            {connectionMethod === 'qrcode' ? 'Gerando QR Code na VPS, aguarde...' : 'Gerando Código de Pareamento na API, aguarde...'}
           </p>
         </div>
       )}
