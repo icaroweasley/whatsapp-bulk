@@ -398,7 +398,13 @@ function AppV2() {
       }
     } catch (e) {}
 
-    const payloadWhere = realInstanceId ? { instanceId: realInstanceId } : {};
+    if (!realInstanceId) {
+      setIsLoadingContacts(false);
+      alert('Não foi possível carregar os contatos. A instância parece estar desconectada ou excluída.');
+      return;
+    }
+
+    const payloadWhere = { instanceId: realInstanceId };
 
     const endpointsContacts = [
       { path: `/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
@@ -1200,7 +1206,6 @@ function AppV2() {
 
             <div className="w-full">
               <ConnectionManager 
-                 connectedInstance={instanceName}
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);
