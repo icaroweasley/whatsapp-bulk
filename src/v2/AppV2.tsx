@@ -388,6 +388,7 @@ function AppV2() {
 
     // 1. Fetch real instanceId for security filtering
     let realInstanceId = '';
+    let currentState = '';
     try {
       const stateRes = await fetch(`/api-proxy/instance/connectionState/${targetInstance}`, {
         method: 'GET',
@@ -396,8 +397,15 @@ function AppV2() {
       if (stateRes.ok) {
         const stateData = await stateRes.json();
         realInstanceId = stateData?.instance?.instanceId || stateData?.instance?.id || '';
+        currentState = stateData?.instance?.state || stateData?.state || '';
       }
     } catch (e) {}
+
+    if (currentState === 'connecting') {
+      setIsLoadingContacts(false);
+      alert('A sua instância ainda está sincronizando os dados com o WhatsApp (Status: Conectando). Isso pode levar alguns segundos ou minutos se você tiver muitos contatos.\n\nAguarde um pouco e clique em "Buscar da API" novamente.');
+      return;
+    }
 
     if (!realInstanceId) {
       setIsLoadingContacts(false);
