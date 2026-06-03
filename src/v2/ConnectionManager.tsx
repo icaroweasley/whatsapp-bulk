@@ -208,7 +208,6 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       if (data?.pairingCode) setPairingCode(data.pairingCode);
       else if (data?.hash?.pairingCode) setPairingCode(data.hash.pairingCode);
       else if (data?.qrcode?.pairingCode) setPairingCode(data.qrcode.pairingCode);
-      else if (data?.code) setPairingCode(data.code);
       
       if (data.qrcode && data.qrcode.base64) {
         setQrCodeBase64(data.qrcode.base64);
@@ -270,8 +269,6 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           }
           if (qrData?.pairingCode) {
             setPairingCode(qrData.pairingCode);
-          } else if (qrData?.code) {
-            setPairingCode(qrData.code);
           }
         }
 
