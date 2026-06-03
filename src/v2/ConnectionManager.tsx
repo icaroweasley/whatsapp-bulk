@@ -15,6 +15,13 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   const instances = user?.instances || [];
   
   const [instanceName, setInstanceName] = useState(connectedInstance || instances[0] || '');
+  
+  useEffect(() => {
+    if (!instanceName && instances.length > 0) {
+      setInstanceName(instances[0]);
+    }
+  }, [instanceName, instances]);
+
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'creating' | 'waiting_qr' | 'connected' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
