@@ -245,14 +245,23 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         const targetUrl = cleanUrl(baseUrl);
         
         // 1. Check state
+        const token = localStorage.getItem('evolution_token');
         const stateRes = await fetch(`/api-proxy/instance/connectionState/${name}`, {
           method: 'GET',
           headers: {
             'apikey': apiKey,
-            'x-target-url': targetUrl
+            'x-target-url': targetUrl,
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           }
         });
         
+        if (stateRes.status === 403) {
+           clearInterval(interval);
+           setStatus('error');
+           setErrorMsg('Acesso negado. Esta instância não pertence à sua conta no banco de dados. Se você excluiu ela, precisa adicionar novamente pelo Painel Administrativo.');
+           return;
+        }
+
         if (stateRes.ok) {
           const data = await stateRes.json();
           const state = data?.instance?.state || data?.state;
