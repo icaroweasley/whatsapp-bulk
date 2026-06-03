@@ -58,9 +58,14 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       setIsCheckingState(true);
       try {
         const targetUrl = cleanUrl(baseUrl);
+        const token = localStorage.getItem('evolution_token');
         const res = await fetch(`/api-proxy/instance/connectionState/${instanceName}`, {
           method: 'GET',
-          headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+          headers: { 
+            'apikey': apiKey, 
+            'x-target-url': targetUrl,
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
         });
         
         if (res.ok && isMounted) {
@@ -71,8 +76,13 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             setStatus('connected');
             
             // Try to get phone number
+            const token = localStorage.getItem('evolution_token');
             const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
-                headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                headers: { 
+                  'apikey': apiKey, 
+                  'x-target-url': targetUrl,
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                }
             });
             if(fetchRes.ok){
                const allInstances = await fetchRes.json();
@@ -86,8 +96,13 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             setInstanceInfo(null);
             
             // Auto-fallback: se a atual está fechada, busca se tem alguma aberta
+            const token = localStorage.getItem('evolution_token');
             const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
-                headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                headers: { 
+                  'apikey': apiKey, 
+                  'x-target-url': targetUrl,
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                }
             });
             if(fetchRes.ok){
                const allInstances = await fetchRes.json();
@@ -155,7 +170,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       try {
         const checkRes = await fetch(`/api-proxy/instance/connectionState/${instanceName.trim()}`, {
           method: 'GET',
-          headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+          headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
         });
         if (checkRes.ok) {
           const checkData = await checkRes.json();
@@ -352,7 +367,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   // 1. Desconecta o WhatsApp (Logout)
                   await fetch(`/api-proxy/instance/logout/${instanceName}`, {
                     method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
                   });
                   
                   // Aguarda um momento para o WhatsApp desvincular do celular
@@ -361,7 +376,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   // 2. Remove a instância do Evolution API (Wipe total da nuvem)
                   await fetch(`/api-proxy/instance/delete/${instanceName}`, {
                     method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
                   });
                   
                   // 3. Remove a instância do Banco de Dados (PostgreSQL) usando nosso endpoint
