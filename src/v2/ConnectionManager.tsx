@@ -179,7 +179,11 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           instanceName: instanceName.trim(),
           qrcode: true,
           number: formattedNumber,
-          integration: "WHATSAPP-BAILEYS"
+          integration: "WHATSAPP-BAILEYS",
+          // Anti-hang flags for large WhatsApp accounts:
+          syncFullHistory: false,
+          readMessages: false,
+          readStatus: false
         })
       });
 
