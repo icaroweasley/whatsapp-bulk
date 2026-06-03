@@ -246,7 +246,10 @@ function AppV2() {
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
-    return loaded || (user?.instances && user.instances[0]) || '';
+    if (loaded && user?.instances && user.instances.includes(loaded)) {
+      return loaded;
+    }
+    return (user?.instances && user.instances[0]) || '';
   });
   const [savedInstances, setSavedInstances] = useState<SavedInstance[]>(() => {
     const loaded = localStorage.getItem(`evolution_saved_instances_${user?.username || 'default'}`);
@@ -271,6 +274,22 @@ function AppV2() {
   useEffect(() => {
     if (token) fetchLists();
   }, [token]);
+
+  // Fetch the latest user data on mount to avoid stale localStorage cache
+  useEffect(() => {
+    if (token) refreshUser();
+  }, [token]);
+
+  // Ensure instanceName is valid whenever user.instances updates (e.g. after refreshUser)
+  useEffect(() => {
+    if (user && user.instances) {
+      if (instanceName && !user.instances.includes(instanceName)) {
+        setInstanceName(user.instances[0] || '');
+      } else if (!instanceName && user.instances.length > 0) {
+        setInstanceName(user.instances[0]);
+      }
+    }
+  }, [user?.instances, instanceName]);
 
   const fetchLists = async () => {
     try {
@@ -1181,6 +1200,7 @@ function AppV2() {
 
             <div className="w-full">
               <ConnectionManager 
+                 connectedInstance={instanceName}
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);

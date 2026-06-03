@@ -41,6 +41,13 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
     let isMounted = true;
 
     const checkState = async () => {
+      // SECURITY: If user has assigned instances, force the instanceName to be one of them.
+      // This prevents pulling an old instance from localStorage that was removed from the user.
+      if (instances.length > 0 && !instances.includes(instanceName)) {
+        setInstanceName(instances[0]);
+        return;
+      }
+
       setIsCheckingState(true);
       try {
         const targetUrl = cleanUrl(baseUrl);
@@ -77,7 +84,12 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             });
             if(fetchRes.ok){
                const allInstances = await fetchRes.json();
-               const openInstance = allInstances.find((i: any) => i.connectionStatus === 'open' || i.instance?.state === 'open');
+               const openInstance = allInstances.find((i: any) => {
+                   const name = i.name || i.instance?.instanceName;
+                   const isOpen = i.connectionStatus === 'open' || i.instance?.state === 'open';
+                   // SECURITY: Only auto-connect to instances belonging to this user
+                   return isOpen && instances.includes(name);
+               });
                if(openInstance) {
                    const openName = openInstance.name || openInstance.instance?.instanceName;
                    if (openName && openName !== instanceName) {
