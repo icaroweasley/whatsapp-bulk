@@ -346,24 +346,47 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             <button 
               onClick={async () => {
                 try {
+                  setStatus('loading');
                   const targetUrl = cleanUrl(baseUrl);
-                  // 1. Desconecta o WhatsApp
+                  
+                  // 1. Desconecta o WhatsApp (Logout)
                   await fetch(`/api-proxy/instance/logout/${instanceName}`, {
                     method: 'DELETE',
                     headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
                   });
-                  // 2. Remove a instância do Evolution API para limpeza
+                  
+                  // Aguarda um momento para o WhatsApp desvincular do celular
+                  await new Promise(r => setTimeout(r, 2000));
+                  
+                  // 2. Remove a instância do Evolution API (Wipe total da nuvem)
                   await fetch(`/api-proxy/instance/delete/${instanceName}`, {
                     method: 'DELETE',
                     headers: { 'apikey': apiKey, 'x-target-url': targetUrl }
                   });
-                } catch(e) {}
+                  
+                  // 3. Remove a instância do Banco de Dados (PostgreSQL) usando nosso endpoint
+                  const token = localStorage.getItem('evolution_token');
+                  if (token) {
+                    await fetch(`/api/users/remove-instance`, {
+                      method: 'DELETE',
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                      },
+                      body: JSON.stringify({ instanceName })
+                    });
+                  }
 
-                if(onDisconnect) onDisconnect();
-                setStatus('idle');
-                setInstanceName('');
-                setQrCodeBase64(null);
-                setPairingCode(null);
+                } catch(e) {
+                  console.error("Erro ao apagar instância:", e);
+                } finally {
+                  setInstanceName('');
+                  setInstanceInfo(null);
+                  setStatus('idle');
+                  if (onDisconnect) onDisconnect();
+                  // Força um recarregamento para o AppV2 puxar as instâncias vazias do DB
+                  window.location.reload();
+                }
               }}
               className="w-full sm:w-auto liquid-glass border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 rounded-2xl sm:rounded-full px-6 py-4 sm:py-3.5 text-sm font-medium"
             >

@@ -1,0 +1,1 @@
+sudo docker exec postgres psql -U evolution -d evolution -c "SELECT COUNT(*) FROM \"Contact\" WHERE \"instanceId\" = '5cc61712-e5e6-4dee-9176-c78ba91d1a6a' AND \"remoteJid\" LIKE '55%@s.whatsapp.net';"

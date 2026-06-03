@@ -1,0 +1,1 @@
+sudo docker exec postgres psql -U evolution -d evolution -c "SELECT \"pushName\", \"profilePicUrl\", \"remoteJid\" FROM \"Contact\" WHERE \"instanceId\" = (SELECT id FROM \"Instance\" WHERE name = 'distr' LIMIT 1);"

@@ -246,10 +246,11 @@ function AppV2() {
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
-    if (loaded && user?.instances && user.instances.includes(loaded)) {
+    const instancesArray = user?.instances ? (typeof user.instances === 'string' ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : user.instances) : [];
+    if (loaded && instancesArray.includes(loaded)) {
       return loaded;
     }
-    return (user?.instances && user.instances[0]) || '';
+    return instancesArray[0] || '';
   });
   const [savedInstances, setSavedInstances] = useState<SavedInstance[]>(() => {
     const loaded = localStorage.getItem(`evolution_saved_instances_${user?.username || 'default'}`);
