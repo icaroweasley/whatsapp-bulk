@@ -35,13 +35,15 @@ export default async function handler(req, res) {
   // Removemos o '/api-proxy' da URL original para descobrir o endpoint final (ex: /chat/sendText/...)
   const pathPart = req.url.replace('/api-proxy', '') || '/';
   
-  // --- VERIFICAÇÃO DE COTA (SaaS) ---
+  // --- VERIFICAÇÃO DE COTA E SEGURANÇA (SaaS) ---
   const isSendingMessage = pathPart.includes('/message/sendText') || pathPart.includes('/message/sendMedia');
   let userId = null;
 
-  if (isSendingMessage) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+  // Enforce JWT validation for ALL requests to ensure instance ownership, 
+  // except maybe very generic ones. We will check auth if authorization header is present.
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
     
     if (!token) {
       Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
@@ -56,6 +58,18 @@ export default async function handler(req, res) {
       if (!user || user.planStatus !== 'active') {
         Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
         return res.status(403).json({ error: 'Assinatura inativa. Pague o plano para fazer disparos.' });
+      }
+
+      // Check instance ownership for ALL requests that target a specific instance
+      const instancesArray = user.instances ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const parts = pathPart.split('/').filter(Boolean);
+      // Evolution API pattern: /category/action/instanceName
+      if (parts.length >= 2 && parts[0] !== 'instance' || (parts[0] === 'instance' && !['fetchInstances', 'create'].includes(parts[1]))) {
+        const requestedInstance = parts[parts.length - 1].split('?')[0]; // Get the last part, remove query strings
+        if (requestedInstance && !instancesArray.includes(requestedInstance)) {
+          Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+          return res.status(403).json({ error: `Acesso negado. A instância '${requestedInstance}' não pertence à sua conta.` });
+        }
       }
 
       // Checa a cota diária
