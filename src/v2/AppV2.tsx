@@ -828,9 +828,8 @@ function AppV2() {
       }
 
       const contact = targetContacts[i];
-      
-      setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'pending' } : c));
-      
+      // [QA Refactor] Removed O(N^2) state map update to prevent UI freezes
+
       try {
         const personalizedMessage = message.replace(/{nome}/gi, contact.name || contact.pushName || 'cliente');
 
@@ -843,8 +842,10 @@ function AppV2() {
            }
         }
 
-        // Anti-ban: Simular digitação
-        const typingDelayMs = Math.floor(Math.random() * (10000 - 2000 + 1)) + 2000;
+        // [QA Refactor] Anti-ban: Simular digitação orgânica proporcional ao tamanho do texto (≈40ms por caractere)
+        const textLength = personalizedMessage ? personalizedMessage.length : 10;
+        const baseTyping = textLength * 40;
+        const typingDelayMs = Math.min(Math.max(baseTyping, 2000), 15000) + Math.floor(Math.random() * 2000);
         const typingSeconds = (typingDelayMs / 1000).toFixed(1);
         
         addLog(`Simulando digitação para ${contact.name || contact.number} (${typingSeconds}s)...`, 'pending');
@@ -961,11 +962,11 @@ function AppV2() {
         }
 
         if (contactSuccess && !contactErrorMsg) {
-           setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'sent' } : c));
+           // [QA Refactor] Removed O(N^2) state map update
            sentCount++;
            addLog(`Enviado para ${contact.name || contact.number}`, 'success');
         } else {
-           setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
+           // [QA Refactor] Removed O(N^2) state map update
            addLog(`Erro ao enviar para ${contact.number}: ${contactErrorMsg}`, 'error');
            
            if (contactErrorMsg.includes('Limite diário')) {
@@ -975,7 +976,7 @@ function AppV2() {
            }
         }
       } catch (error) {
-        setTargetContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status: 'error' } : c));
+        // [QA Refactor] Removed O(N^2) state map update
         addLog(`Falha de conexão com ${contact.number}`, 'error');
       }
 
