@@ -413,13 +413,7 @@ function AppV2() {
       return;
     }
 
-    if (!realInstanceId) {
-      setIsLoadingContacts(false);
-      alert(`Não foi possível carregar os contatos. A instância parece estar desconectada ou excluída. (Status atual: ${currentState || 'desconhecido'})`);
-      return;
-    }
-
-    const payloadWhere = { instanceId: realInstanceId };
+    const payloadWhere = realInstanceId ? { instanceId: realInstanceId } : {};
 
     const endpointsContacts = [
       { path: `/chat/findContacts/${targetInstance}`, method: 'POST', body: { where: payloadWhere } },
