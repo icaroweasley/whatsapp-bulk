@@ -881,8 +881,17 @@ function AppV2() {
         let contactSuccess = false;
         let contactErrorMsg = '';
 
+        const activeInstance = instanceName || (user?.instances && user.instances.length > 0 ? user.instances[0] : '') || localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
+        
+        if (!activeInstance) {
+            addLog(`Erro crítico: Nenhuma instância selecionada. Atualize a página e conecte novamente.`, 'error');
+            contactSuccess = false;
+            contactErrorMsg = 'Instância não selecionada';
+            break; // Stop the entire loop if no instance is selected
+        }
+
         const sendText = async (textToSend: string) => {
-           const endpoint = `/message/sendText/${instanceName}`;
+           const endpoint = `/message/sendText/${activeInstance}`;
            const response = await fetch(`/api-proxy${endpoint}`, {
               method: 'POST',
               headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
@@ -915,7 +924,7 @@ function AppV2() {
              // Disparo sequencial para as imagens
              for (let mIndex = 0; mIndex < finalMediaAttachments.length; mIndex++) {
                 const attachment = finalMediaAttachments[mIndex];
-                const endpoint = `/message/sendMedia/${instanceName}`;
+                const endpoint = `/message/sendMedia/${activeInstance}`;
                 let finalMedia = attachment.base64;
                 if (finalMedia.includes('base64,')) {
                     finalMedia = finalMedia.split('base64,')[1];
