@@ -281,16 +281,7 @@ function AppV2() {
     if (token) refreshUser();
   }, [token]);
 
-  // Ensure instanceName is valid whenever user.instances updates (e.g. after refreshUser)
-  useEffect(() => {
-    if (user && user.instances) {
-      if (instanceName && !user.instances.includes(instanceName)) {
-        setInstanceName(user.instances[0] || '');
-      } else if (!instanceName && user.instances.length > 0) {
-        setInstanceName(user.instances[0]);
-      }
-    }
-  }, [user?.instances, instanceName]);
+  // Removido useEffect agressivo que apagava instanceName caso não estivesse em user.instances
 
   const fetchLists = async () => {
     try {
