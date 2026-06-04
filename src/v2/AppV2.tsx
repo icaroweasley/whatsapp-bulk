@@ -138,12 +138,12 @@ services:
       - DATABASE_CONNECTION_URI=postgresql://\${POSTGRES_USER:-postgres}:\${POSTGRES_PASSWORD:-postgres123}@postgres:5432/\${EVOLUTION_DB_NAME:-evolution}?schema=public
       - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
       - DATABASE_SAVE_DATA_INSTANCE=true
-      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
-      - DATABASE_SAVE_MESSAGE_UPDATE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=false
+      - DATABASE_SAVE_MESSAGE_UPDATE=false
       - DATABASE_SAVE_DATA_CONTACTS=true
       - DATABASE_SAVE_DATA_CHATS=true
       - DATABASE_SAVE_DATA_LABELS=true
-      - DATABASE_SAVE_DATA_HISTORIC=true
+      - DATABASE_SAVE_DATA_HISTORIC=false
       # Redis (use a mesma senha do redis acima)
       - CACHE_REDIS_ENABLED=true
       - CACHE_REDIS_URI=redis://:\${REDIS_PASSWORD:-redis123}@redis:6379
@@ -407,9 +407,15 @@ function AppV2() {
       return;
     }
 
+    if (currentState === 'close') {
+      setIsLoadingContacts(false);
+      alert('O WhatsApp fechou a conexão temporariamente (Status: Fechado). O servidor está tentando reconectar automaticamente nos bastidores.\n\nAguarde cerca de 15 a 30 segundos e clique em "Buscar da API" novamente. Se continuar assim, desconecte pelo celular e conecte novamente.');
+      return;
+    }
+
     if (!realInstanceId) {
       setIsLoadingContacts(false);
-      alert('Não foi possível carregar os contatos. A instância parece estar desconectada ou excluída.');
+      alert(`Não foi possível carregar os contatos. A instância parece estar desconectada ou excluída. (Status atual: ${currentState || 'desconhecido'})`);
       return;
     }
 
