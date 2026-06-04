@@ -205,7 +205,10 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           // Anti-hang flags for large WhatsApp accounts:
           syncFullHistory: false,
           readMessages: false,
-          readStatus: false
+          readStatus: false,
+          groupsIgnore: true,
+          alwaysOnline: true,
+          rejectCall: true
         })
       });
 
