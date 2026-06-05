@@ -127,6 +127,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             if (status === 'connected') setStatus('idle');
             setInstanceInfo(null);
           }
+        } else if (!res.ok && isMounted) {
+          if (status === 'connected') setStatus('idle');
+          setInstanceInfo(null);
         }
       } catch (e) {
       } finally {
@@ -416,6 +419,11 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   setInstanceName('');
                   setInstanceInfo(null);
                   setStatus('idle');
+                  
+                  const username = user?.username || 'default';
+                  localStorage.removeItem(`evo_selectedInstance_${username}`);
+                  localStorage.removeItem(`evo_targetContacts_${username}_${instanceName}`);
+                  
                   if (onDisconnect) onDisconnect();
                   // Força um recarregamento para o AppV2 puxar as instâncias vazias do DB
                   window.location.reload();
