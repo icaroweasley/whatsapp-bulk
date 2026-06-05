@@ -363,7 +363,7 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res: any) => {
 });
 
 // Save Active Instance
-app.put('/api/user/active-instance', authenticateToken, async (req: any, res: any) => {
+app.put('/api/users/active-instance', authenticateToken, async (req: any, res: any) => {
   try {
     const { instanceName } = req.body;
     if (!instanceName) return res.status(400).json({ error: 'Instance name required' });
@@ -376,6 +376,35 @@ app.put('/api/user/active-instance', authenticateToken, async (req: any, res: an
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao salvar a instância ativa' });
+  }
+});
+
+// Remove Active Instance from DB
+app.delete('/api/users/remove-instance', authenticateToken, async (req: any, res: any) => {
+  try {
+    const { instanceName } = req.body;
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    let newInstances = user.instances || '';
+    if (newInstances) {
+      const instancesArray = newInstances.split(',').map((s: string) => s.trim()).filter(Boolean);
+      newInstances = instancesArray.filter((i: string) => i !== instanceName).join(',');
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        lastActiveInstance: null,
+        instances: newInstances
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao remover instância' });
   }
 });
 
