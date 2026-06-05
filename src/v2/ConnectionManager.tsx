@@ -472,7 +472,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           )}
           
           <div>
-            <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Sua Instância Atribuída</label>
+            <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Nome da Conexão</label>
             {instances.length === 0 || isAdmin ? (
               <input
                 type="text"
