@@ -14,7 +14,12 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   const { user } = useAuth();
   const instances = user?.instances || [];
   
-  const [instanceName, setInstanceName] = useState(connectedInstance || instances[0] || '');
+  const [instanceName, setInstanceName] = useState(() => {
+    if (connectedInstance) return connectedInstance;
+    const cached = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
+    if (cached && (instances.length === 0 || instances.includes(cached))) return cached;
+    return instances[0] || '';
+  });
   
   useEffect(() => {
     if (!instanceName && instances.length > 0) {
@@ -74,6 +79,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           
           if (state === 'open' || state === 'connected' || state === 'CONNECTED') {
             setStatus('connected');
+            if (onConnected) onConnected(instanceName);
             
             // Try to get phone number
             const token = localStorage.getItem('evolution_token');
