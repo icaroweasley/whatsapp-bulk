@@ -66,7 +66,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       setIsCheckingState(true);
       try {
         const targetUrl = cleanUrl(baseUrl);
-        const token = localStorage.getItem('evolution_token');
+        const token = localStorage.getItem('evo_token');
         const res = await fetch(`/api-proxy/instance/connectionState/${instanceName}`, {
           method: 'GET',
           headers: { 
@@ -84,7 +84,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             setStatus('connected');
             
             // Try to get phone number
-            const token = localStorage.getItem('evolution_token');
+            const token = localStorage.getItem('evo_token');
             const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
                 headers: { 
                   'apikey': apiKey, 
@@ -176,7 +176,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
       try {
         const checkRes = await fetch(`/api-proxy/instance/connectionState/${instanceName.trim()}`, {
           method: 'GET',
-          headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
+          headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
         });
         if (checkRes.ok) {
           const checkData = await checkRes.json();
@@ -254,7 +254,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         const targetUrl = cleanUrl(baseUrl);
         
         // 1. Check state
-        const token = localStorage.getItem('evolution_token');
+        const token = localStorage.getItem('evo_token');
         const stateRes = await fetch(`/api-proxy/instance/connectionState/${name}`, {
           method: 'GET',
           headers: {
@@ -385,7 +385,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   // 1. Desconecta o WhatsApp (Logout)
                   await fetch(`/api-proxy/instance/logout/${instanceName}`, {
                     method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
                   });
                   
                   // Aguarda um momento para o WhatsApp desvincular do celular
@@ -394,17 +394,19 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   // 2. Remove a instância do Evolution API (Wipe total da nuvem)
                   await fetch(`/api-proxy/instance/delete/${instanceName}`, {
                     method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evolution_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evolution_token')}` } : {}) }
+                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
                   });
                   
                   // 3. Remove a instância do Banco de Dados (PostgreSQL) usando nosso endpoint
-                  const token = localStorage.getItem('evolution_token');
+                  const token = localStorage.getItem('evo_token');
                   if (token) {
-                    await fetch(`/api/users/remove-instance/${instanceName}`, {
+                    await fetch(`/api/users/remove-instance`, {
                       method: 'DELETE',
                       headers: { 
-                        'Authorization': `Bearer ${token}` 
-                      }
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ instanceName })
                     });
                   }
 
