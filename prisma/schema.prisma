@@ -17,6 +17,7 @@ model User {
   planExpiresAt    DateTime?
   customPrice      Float?       // Preço negociado internamente com o cliente
   mpCustomerId     String?      // Mercado Pago Payment ID or Customer ID
+  lastActiveInstance String?    // Sincronização entre dispositivos da última instância selecionada
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   lists            SavedList[]

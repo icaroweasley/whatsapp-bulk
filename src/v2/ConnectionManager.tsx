@@ -16,6 +16,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   const isAdmin = user?.username === 'karu';
 
   const [instanceName, setInstanceName] = useState(() => {
+    if (user?.lastActiveInstance) return user.lastActiveInstance;
     if (connectedInstance) return connectedInstance;
     const cached = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
     if (cached && (isAdmin || instances.length === 0 || instances.includes(cached))) return cached;

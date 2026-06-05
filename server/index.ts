@@ -81,6 +81,7 @@ app.post('/api/auth/login', async (req, res) => {
         customPrice: user.customPrice, 
         planExpiresAt: user.planExpiresAt, 
         mpCustomerId: user.mpCustomerId,
+        lastActiveInstance: user.lastActiveInstance,
         messagesSentToday: usage ? usage.messageCount : 0
       } 
     });
@@ -130,6 +131,7 @@ app.post('/api/auth/register', async (req, res) => {
         customPrice: user.customPrice, 
         planExpiresAt: user.planExpiresAt, 
         mpCustomerId: user.mpCustomerId,
+        lastActiveInstance: null,
         messagesSentToday: 0
       } 
     });
@@ -351,11 +353,29 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res: any) => {
         customPrice: user.customPrice, 
         planExpiresAt: user.planExpiresAt, 
         mpCustomerId: user.mpCustomerId,
+        lastActiveInstance: user.lastActiveInstance,
         messagesSentToday: usage ? usage.messageCount : 0
       } 
     });
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Save Active Instance
+app.put('/api/user/active-instance', authenticateToken, async (req: any, res: any) => {
+  try {
+    const { instanceName } = req.body;
+    if (!instanceName) return res.status(400).json({ error: 'Instance name required' });
+    
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { lastActiveInstance: instanceName }
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao salvar a instância ativa' });
   }
 });
 

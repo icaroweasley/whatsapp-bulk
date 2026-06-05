@@ -245,6 +245,7 @@ function AppV2() {
   const baseUrl = import.meta.env.VITE_EVOLUTION_URL || '';
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
+    if (user?.lastActiveInstance) return user.lastActiveInstance;
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
     const instancesArray = user?.instances ? (typeof user.instances === 'string' ? (user.instances as string).split(',').map((s: string) => s.trim()).filter(Boolean) : user.instances) : [];
     const isAdmin = user?.username === 'karu';
@@ -326,8 +327,23 @@ function AppV2() {
   }, [mediaAttachments.length, textPosition]);
 
   // Handle instance changes
-  useEffect(() => { 
-    localStorage.setItem(`evo_selectedInstance_${user?.username || 'default'}`, instanceName);
+  useEffect(() => {
+    if (instanceName) {
+      localStorage.setItem(`evo_selectedInstance_${user?.username || 'default'}`, instanceName);
+      
+      // Update DB
+      if (token) {
+        fetch('/api/user/active-instance', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ instanceName })
+        }).catch(() => {});
+      }
+    }
+    
     const loaded = localStorage.getItem(`evo_targetContacts_${user?.username || 'default'}_${instanceName}`);
     if (loaded) { try { setTargetContacts(JSON.parse(loaded)); } catch(e) { setTargetContacts([]); } }
     else { setTargetContacts([]); }

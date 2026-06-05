@@ -8,6 +8,7 @@ interface User {
   customPrice?: number | null;
   planExpiresAt?: string | null;
   mpCustomerId?: string | null;
+  lastActiveInstance?: string | null;
   messagesSentToday?: number;
 }
 
