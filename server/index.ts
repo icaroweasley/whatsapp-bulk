@@ -13,6 +13,17 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_charlie_key_2026';
 
+function getTodayDate() {
+    const str = new Date().toLocaleString("en-US", { 
+        timeZone: "America/Sao_Paulo", 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    });
+    const [month, day, year] = str.split('/');
+    return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+}
+
 const mpClient = new MercadoPagoConfig({ 
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '' 
 });
@@ -65,8 +76,7 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getTodayDate();
     const usage = await prisma.dailyUsage.findUnique({
       where: { userId_date: { userId: user.id, date: today } }
     });
@@ -338,8 +348,7 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res: any) => {
 
     const instancesArray = (user.instances || '').split(',').map(s => s.trim()).filter(Boolean);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getTodayDate();
     const usage = await prisma.dailyUsage.findUnique({
       where: { userId_date: { userId: user.id, date: today } }
     });
@@ -561,8 +570,7 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
         return res.status(403).json({ error: 'Assinatura inativa. Pague o plano para fazer disparos.' });
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = getTodayDate();
 
       const usage = await prisma.dailyUsage.upsert({
         where: { userId_date: { userId: user.id, date: today } },
@@ -615,8 +623,7 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
     const data = await response.text();
 
     if (isSendingMessage && response.ok && userId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = getTodayDate();
       
       let targetNumber = '';
       if (req.body && req.body.number) {
