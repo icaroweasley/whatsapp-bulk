@@ -124,14 +124,18 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                }
             }
           } else {
-            if (status === 'connected') setStatus('idle');
+            setStatus(prev => prev === 'connected' ? 'idle' : prev);
             setInstanceInfo(null);
           }
         } else if (!res.ok && isMounted) {
-          if (status === 'connected') setStatus('idle');
+          setStatus(prev => prev === 'connected' ? 'idle' : prev);
           setInstanceInfo(null);
         }
       } catch (e) {
+        if (isMounted) {
+          setStatus(prev => prev === 'connected' ? 'idle' : prev);
+          setInstanceInfo(null);
+        }
       } finally {
         if (isMounted) setIsCheckingState(false);
       }
@@ -385,31 +389,31 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   setStatus('loading');
                   const targetUrl = cleanUrl(baseUrl);
                   
-                  // 1. Desconecta o WhatsApp (Logout)
-                  await fetch(`/api-proxy/instance/logout/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
-                  });
-                  
-                  // Aguarda um momento para o WhatsApp desvincular do celular
-                  await new Promise(r => setTimeout(r, 2000));
-                  
-                  // 2. Remove a instância do Evolution API (Wipe total da nuvem)
-                  await fetch(`/api-proxy/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
-                  });
+                  // 1. Desconecta o WhatsApp (Logout) e Evolution API (Tenta na nuvem, continua se falhar)
+                  try {
+                    await fetch(`/api-proxy/instance/logout/${instanceName}`, {
+                      method: 'DELETE',
+                      headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
+                    });
+                    
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    await fetch(`/api-proxy/instance/delete/${instanceName}`, {
+                      method: 'DELETE',
+                      headers: { 'apikey': apiKey, 'x-target-url': targetUrl, ...(localStorage.getItem('evo_token') ? { 'Authorization': `Bearer ${localStorage.getItem('evo_token')}` } : {}) }
+                    });
+                  } catch (apiError) {
+                    console.error("Erro na nuvem, continuando com a exclusão local:", apiError);
+                  }
                   
                   // 3. Remove a instância do Banco de Dados (PostgreSQL) usando nosso endpoint
                   const token = localStorage.getItem('evo_token');
                   if (token) {
-                    await fetch(`/api/users/remove-instance`, {
+                    await fetch(`/api/users/remove-instance/${instanceName}`, {
                       method: 'DELETE',
                       headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ instanceName })
+                        'Authorization': `Bearer ${token}`
+                      }
                     });
                   }
 

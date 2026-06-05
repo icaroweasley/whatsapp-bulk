@@ -1275,7 +1275,6 @@ function AppV2() {
 
             <div className="w-full">
               <ConnectionManager 
-                 connectedInstance={instanceName}
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);
