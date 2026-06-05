@@ -125,7 +125,6 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           } else {
             if (status === 'connected') setStatus('idle');
             setInstanceInfo(null);
-            setIsConnected(false);
           }
         }
       } catch (e) {
