@@ -245,11 +245,14 @@ function AppV2() {
   const baseUrl = import.meta.env.VITE_EVOLUTION_URL || '';
   const apiKey = import.meta.env.VITE_EVOLUTION_API_KEY || '';
   const [instanceName, setInstanceName] = useState(() => {
+    const isAdmin = user?.username === 'karu';
+    if (isAdmin) return '';
+    
     if (user?.lastActiveInstance) return user.lastActiveInstance;
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
     const instancesArray = user?.instances ? (typeof user.instances === 'string' ? (user.instances as string).split(',').map((s: string) => s.trim()).filter(Boolean) : user.instances) : [];
-    const isAdmin = user?.username === 'karu';
-    if (loaded && (isAdmin || instancesArray.length === 0 || (instancesArray as string[]).includes(loaded))) {
+    
+    if (loaded && (instancesArray.length === 0 || (instancesArray as string[]).includes(loaded))) {
       return loaded;
     }
     return (instancesArray as string[])[0] || '';
