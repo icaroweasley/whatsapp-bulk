@@ -16,18 +16,19 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
   const isAdmin = user?.username === 'karu';
 
   const [instanceName, setInstanceName] = useState(() => {
+    if (isAdmin) return '';
     if (user?.lastActiveInstance) return user.lastActiveInstance;
     if (connectedInstance) return connectedInstance;
     const cached = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
-    if (cached && (isAdmin || instances.length === 0 || instances.includes(cached))) return cached;
+    if (cached && (instances.length === 0 || instances.includes(cached))) return cached;
     return instances[0] || '';
   });
   
   useEffect(() => {
-    if (!instanceName && instances.length > 0) {
+    if (!isAdmin && !instanceName && instances.length > 0) {
       setInstanceName(instances[0]);
     }
-  }, [instanceName, instances]);
+  }, [instanceName, instances, isAdmin]);
 
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'creating' | 'waiting_qr' | 'connected' | 'error' | 'loading'>('idle');
