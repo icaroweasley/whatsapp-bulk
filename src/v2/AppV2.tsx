@@ -281,6 +281,45 @@ function AppV2() {
     if (token) fetchLists();
   }, [token]);
 
+  // Sync state across devices
+  const saveActiveInstance = async (name: string) => {
+    if (!token) return;
+    try {
+      await fetch('/api/users/active-instance', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ instanceName: name })
+      });
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    const checkPersistedState = async () => {
+      if (user?.lastActiveInstance) {
+        try {
+          const targetUrl = baseUrl.trim().replace(/\/$/, '');
+          const cleanUrl = (!targetUrl.startsWith('http') ? 'https://' : '') + targetUrl;
+          const res = await fetch(`/api-proxy/instance/connectionState/${user.lastActiveInstance}`, {
+            headers: { 'apikey': apiKey, 'x-target-url': cleanUrl }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const state = data?.instance?.state || data?.state;
+            if (state === 'open' || state === 'connected') {
+               setInstanceName(user.lastActiveInstance);
+               setCurrentScreen(2);
+               if (allContacts.length === 0) fetchContacts(user.lastActiveInstance, true);
+            }
+          }
+        } catch (e) {}
+      }
+    };
+    checkPersistedState();
+  }, [user?.lastActiveInstance, baseUrl, apiKey]);
+
   // Fetch the latest user data on mount to avoid stale localStorage cache
   useEffect(() => {
     if (token) refreshUser();
@@ -1236,9 +1275,11 @@ function AppV2() {
 
             <div className="w-full">
               <ConnectionManager 
+                 connectedInstance={instanceName}
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);
+                   saveActiveInstance(name);
                    if (allContacts.length === 0) fetchContacts(name, true);
                  }} 
               />
