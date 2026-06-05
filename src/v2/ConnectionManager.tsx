@@ -101,32 +101,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           } else {
             if (status === 'connected') setStatus('idle');
             setInstanceInfo(null);
-            
-            // Auto-fallback: se a atual está fechada, busca se tem alguma aberta
-            const token = localStorage.getItem('evolution_token');
-            const fetchRes = await fetch(`/api-proxy/instance/fetchInstances`, {
-                headers: { 
-                  'apikey': apiKey, 
-                  'x-target-url': targetUrl,
-                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                }
-            });
-            if(fetchRes.ok){
-               const allInstances = await fetchRes.json();
-               const openInstance = allInstances.find((i: any) => {
-                   const name = i.name || i.instance?.instanceName;
-                   const isOpen = i.connectionStatus === 'open' || i.instance?.state === 'open';
-                   // SECURITY: Only auto-connect to instances belonging to this user
-                   return isOpen && (isAdmin || instances.includes(name));
-               });
-               if(openInstance) {
-                   const openName = openInstance.name || openInstance.instance?.instanceName;
-                   if (openName && openName !== instanceName) {
-                       setInstanceName(openName);
-                       if (onConnected) onConnected(openName);
-                   }
-               }
-            }
+            setIsConnected(false);
           }
         }
       } catch (e) {
