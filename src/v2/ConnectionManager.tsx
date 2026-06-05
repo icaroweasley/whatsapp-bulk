@@ -180,8 +180,8 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
         });
         if (checkRes.ok) {
           const checkData = await checkRes.json();
-          if (checkData?.instance?.state === 'open' || checkData?.instance?.state === 'connecting') {
-            const confirmOverwrite = window.confirm('⚠️ Esta instância já está conectada ou conectando ao WhatsApp!\n\nTem certeza que deseja gerar um novo QR Code e refazer a conexão?\nIsso vai desconectar o aparelho atual.');
+          if (checkData?.instance?.state === 'open') {
+            const confirmOverwrite = window.confirm('⚠️ Esta instância já está conectada ao WhatsApp!\n\nTem certeza que deseja gerar um novo QR Code e refazer a conexão?\nIsso vai desconectar o aparelho atual.');
             if (!confirmOverwrite) {
               setStatus('idle');
               if (checkData?.instance?.state === 'open') {
