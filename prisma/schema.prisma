@@ -34,11 +34,12 @@ model SavedList {
 }
 
 model DailyUsage {
-  id           String   @id @default(uuid())
-  userId       String
-  date         DateTime @db.Date // Store just the date part (e.g. 2026-05-27)
-  messageCount Int      @default(0)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  userId           String
+  date             DateTime @db.Date // Store just the date part (e.g. 2026-05-27)
+  messageCount     Int      @default(0)
+  contactedNumbers String[] @default([])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date]) // Ensure only one record per user per day
 }

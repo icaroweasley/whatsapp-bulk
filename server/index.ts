@@ -538,10 +538,27 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
     if (isSendingMessage && response.ok && userId) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      await prisma.dailyUsage.update({
-        where: { userId_date: { userId, date: today } },
-        data: { messageCount: { increment: 1 } }
-      });
+      
+      let targetNumber = '';
+      if (req.body && req.body.number) {
+          targetNumber = String(req.body.number).split('@')[0]; // Pega apenas os dígitos para garantir
+      }
+      
+      if (targetNumber) {
+          const usage = await prisma.dailyUsage.findUnique({
+              where: { userId_date: { userId, date: today } }
+          });
+          
+          if (usage && !usage.contactedNumbers.includes(targetNumber)) {
+              await prisma.dailyUsage.update({
+                where: { userId_date: { userId, date: today } },
+                data: { 
+                    messageCount: { increment: 1 },
+                    contactedNumbers: { push: targetNumber }
+                }
+              });
+          }
+      }
     }
 
     if (response.headers.get('content-type')) {
