@@ -13,11 +13,12 @@ import { useAuth } from '../contexts/AuthContext';
 export default function ConnectionManager({ onConnect, onConnected, onDisconnect, connectedInstance }: ConnectionManagerProps) {
   const { user } = useAuth();
   const instances = user?.instances || [];
-  
+  const isAdmin = user?.username === 'karu';
+
   const [instanceName, setInstanceName] = useState(() => {
     if (connectedInstance) return connectedInstance;
     const cached = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
-    if (cached && (instances.length === 0 || instances.includes(cached))) return cached;
+    if (cached && (isAdmin || instances.length === 0 || instances.includes(cached))) return cached;
     return instances[0] || '';
   });
   
@@ -55,7 +56,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
     const checkState = async () => {
       // SECURITY: If user has assigned instances, force the instanceName to be one of them.
       // This prevents pulling an old instance from localStorage that was removed from the user.
-      if (instances.length > 0 && !instances.includes(instanceName)) {
+      if (!isAdmin && instances.length > 0 && !instances.includes(instanceName)) {
         setInstanceName(instances[0]);
         return;
       }
@@ -115,7 +116,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                    const name = i.name || i.instance?.instanceName;
                    const isOpen = i.connectionStatus === 'open' || i.instance?.state === 'open';
                    // SECURITY: Only auto-connect to instances belonging to this user
-                   return isOpen && instances.includes(name);
+                   return isOpen && (isAdmin || instances.includes(name));
                });
                if(openInstance) {
                    const openName = openInstance.name || openInstance.instance?.instanceName;
@@ -473,32 +474,29 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           
           <div>
             <label className="block text-xs font-medium text-white/60 uppercase tracking-wider mb-2 ml-1">Sua Instância Atribuída</label>
-            {instances.length > 0 ? (
-              <>
-                <div className="relative">
-                  <select
-                    value={instanceName}
-                    onChange={(e) => setInstanceName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg appearance-none cursor-pointer"
-                  >
-                    {instances.map((inst: string) => (
-                      <option key={inst} value={inst} className="bg-black text-white">{inst}</option>
-                    ))}
-                  </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ChevronDown size={20} className="text-white/50" />
-                  </div>
-                </div>
-              </>
-
-            ) : (
+            {instances.length === 0 || isAdmin ? (
               <input
                 type="text"
                 value={instanceName}
                 onChange={(e) => setInstanceName(e.target.value)}
-                placeholder="Digite o nome da nova instância..."
+                placeholder="Digite o nome da instância..."
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg"
               />
+            ) : (
+              <div className="relative">
+                <select
+                  value={instanceName}
+                  onChange={(e) => setInstanceName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 font-medium text-lg appearance-none cursor-pointer"
+                >
+                  {instances.map((inst: string) => (
+                    <option key={inst} value={inst} className="bg-black text-white">{inst}</option>
+                  ))}
+                </select>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown size={20} className="text-white/50" />
+                </div>
+              </div>
             )}
           </div>
 

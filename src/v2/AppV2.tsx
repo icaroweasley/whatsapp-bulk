@@ -247,7 +247,8 @@ function AppV2() {
   const [instanceName, setInstanceName] = useState(() => {
     const loaded = localStorage.getItem(`evo_selectedInstance_${user?.username || 'default'}`);
     const instancesArray = user?.instances ? (typeof user.instances === 'string' ? (user.instances as string).split(',').map((s: string) => s.trim()).filter(Boolean) : user.instances) : [];
-    if (loaded && (instancesArray.length === 0 || (instancesArray as string[]).includes(loaded))) {
+    const isAdmin = user?.username === 'karu';
+    if (loaded && (isAdmin || instancesArray.length === 0 || (instancesArray as string[]).includes(loaded))) {
       return loaded;
     }
     return (instancesArray as string[])[0] || '';
