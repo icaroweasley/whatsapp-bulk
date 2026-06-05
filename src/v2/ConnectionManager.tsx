@@ -559,6 +559,21 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             <Loader2 className="w-4 h-4 animate-spin" />
             Aguardando leitura do celular...
           </div>
+          <button 
+            onClick={async () => {
+              setStatus('idle');
+              setQrCodeBase64(null);
+              setPairingCode(null);
+              try {
+                const targetUrl = cleanUrl(baseUrl);
+                await fetch(`/api-proxy/instance/logout/${instanceName}`, { method: 'DELETE', headers: { apikey: apiKey, 'x-target-url': targetUrl } });
+                await fetch(`/api-proxy/instance/delete/${instanceName}`, { method: 'DELETE', headers: { apikey: apiKey, 'x-target-url': targetUrl } });
+              } catch(e) {}
+            }}
+            className="text-xs text-white/40 hover:text-white/80 transition-colors underline underline-offset-4"
+          >
+            Voltar e cancelar
+          </button>
         </div>
       )}
 
@@ -567,7 +582,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div className="p-8 liquid-glass-strong border border-white/20 rounded-3xl relative overflow-hidden w-full max-w-sm text-center">
              <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
              <p className="text-white/60 font-medium text-sm mb-4 uppercase tracking-widest">Código de Pareamento</p>
-             <h2 className="text-5xl font-bold tracking-[0.2em] text-white relative z-10">
+             <h2 className="text-3xl sm:text-5xl font-bold tracking-[0.1em] sm:tracking-[0.2em] text-white relative z-10 whitespace-nowrap">
                {pairingCode && pairingCode.length === 8 ? `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}` : pairingCode}
              </h2>
           </div>
@@ -581,6 +596,21 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
             <Loader2 className="w-4 h-4 animate-spin" />
             Aguardando vinculação no celular...
           </div>
+          <button 
+            onClick={async () => {
+              setStatus('idle');
+              setQrCodeBase64(null);
+              setPairingCode(null);
+              try {
+                const targetUrl = cleanUrl(baseUrl);
+                await fetch(`/api-proxy/instance/logout/${instanceName}`, { method: 'DELETE', headers: { apikey: apiKey, 'x-target-url': targetUrl } });
+                await fetch(`/api-proxy/instance/delete/${instanceName}`, { method: 'DELETE', headers: { apikey: apiKey, 'x-target-url': targetUrl } });
+              } catch(e) {}
+            }}
+            className="text-xs text-white/40 hover:text-white/80 transition-colors underline underline-offset-4"
+          >
+            Voltar e cancelar
+          </button>
         </div>
       )}
       </div>
