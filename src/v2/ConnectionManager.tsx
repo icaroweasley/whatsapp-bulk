@@ -284,24 +284,24 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           }
         }
 
-        // 2. Fetch QR Code dynamically if not connected
-        const connectRes = await fetch(`/api-proxy/instance/connect/${name}`, {
-          method: 'GET',
-          headers: {
-            'apikey': apiKey,
-            'x-target-url': targetUrl
-          }
-        });
-        
-        if (connectRes.ok) {
-          const qrData = await connectRes.json();
-          if (qrData?.base64) {
-            setQrCodeBase64(qrData.base64);
-          } else if (qrData?.qrcode?.base64) {
-            setQrCodeBase64(qrData.qrcode.base64);
-          }
-          if (qrData?.pairingCode) {
-            setPairingCode(qrData.pairingCode);
+        // 2. Fetch QR Code dynamically if not connected (Apenas para QR Code)
+        // ATENÇÃO: Nunca bater no /connect se for Pareamento de Telefone, pois isso gera um QR Code e CANCELA a notificação do celular!
+        if (connectionMethod === 'qrcode') {
+          const connectRes = await fetch(`/api-proxy/instance/connect/${name}`, {
+            method: 'GET',
+            headers: {
+              'apikey': apiKey,
+              'x-target-url': targetUrl
+            }
+          });
+          
+          if (connectRes.ok) {
+            const qrData = await connectRes.json();
+            if (qrData?.base64) {
+              setQrCodeBase64(qrData.base64);
+            } else if (qrData?.qrcode?.base64) {
+              setQrCodeBase64(qrData.qrcode.base64);
+            }
           }
         }
 
@@ -582,7 +582,7 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div className="p-8 liquid-glass-strong border border-white/20 rounded-3xl relative overflow-hidden w-full max-w-sm text-center">
              <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
              <p className="text-white/60 font-medium text-sm mb-4 uppercase tracking-widest">Código de Pareamento</p>
-             <h2 className="text-3xl sm:text-5xl font-bold tracking-[0.1em] sm:tracking-[0.2em] text-white relative z-10 whitespace-nowrap">
+             <h2 className="text-3xl sm:text-4xl font-bold tracking-[0.1em] sm:tracking-[0.15em] text-white relative z-10 whitespace-nowrap">
                {pairingCode && pairingCode.length === 8 ? `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}` : pairingCode}
              </h2>
           </div>
