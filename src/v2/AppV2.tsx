@@ -1187,9 +1187,9 @@ function AppV2() {
                 <span className="font-semibold text-xl tracking-tight text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
                 <div className="w-px h-5 bg-white/10 mx-2 hidden sm:block"></div>
                 <div className="hidden sm:flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{instanceName ? 'CONEXÃO ATIVA' : 'DESCONECTADO'}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${currentScreen > 1 ? 'text-emerald-400' : 'text-white/40'}`}>{currentScreen > 1 ? 'CONEXÃO ATIVA' : 'AGUARDANDO CONEXÃO'}</span>
                   <span className="text-white/30">|</span>
-                  <span className="text-xs font-medium text-white/70">{instanceName ? instanceName : 'Aguardando Dispositivo'}</span>
+                  <span className="text-xs font-medium text-white/70">{currentScreen > 1 ? instanceName : '---'}</span>
                 </div>
               </div>
               
