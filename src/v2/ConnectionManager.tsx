@@ -400,13 +400,11 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                   // 3. Remove a instância do Banco de Dados (PostgreSQL) usando nosso endpoint
                   const token = localStorage.getItem('evolution_token');
                   if (token) {
-                    await fetch(`/api/users/remove-instance`, {
+                    await fetch(`/api/users/remove-instance/${instanceName}`, {
                       method: 'DELETE',
                       headers: { 
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}` 
-                      },
-                      body: JSON.stringify({ instanceName })
+                      }
                     });
                   }
 
