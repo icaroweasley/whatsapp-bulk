@@ -96,6 +96,30 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
                const myInstance = allInstances.find((i: any) => i.name === instanceName || i.instance?.instanceName === instanceName);
                if(myInstance) {
                    setInstanceInfo(myInstance);
+                   
+                   // Limpeza de duplicatas: garantir apenas 1 instância por número
+                   const myOwner = myInstance.instance?.owner || myInstance.owner;
+                   if (myOwner) {
+                       const duplicateInstances = allInstances.filter((i: any) => {
+                           const owner = i.instance?.owner || i.owner;
+                           const name = i.name || i.instance?.instanceName;
+                           return owner === myOwner && name !== instanceName;
+                       });
+                       
+                       for (const dup of duplicateInstances) {
+                           const dupName = dup.name || dup.instance?.instanceName;
+                           if (dupName) {
+                               fetch(`/api-proxy/instance/delete/${dupName}`, {
+                                   method: 'DELETE',
+                                   headers: {
+                                       'apikey': apiKey,
+                                       'x-target-url': targetUrl,
+                                       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                   }
+                               }).catch(() => {});
+                           }
+                       }
+                   }
                }
             }
           } else {
