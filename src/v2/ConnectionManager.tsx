@@ -543,7 +543,9 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           <div className="p-8 liquid-glass-strong border border-white/20 rounded-3xl relative overflow-hidden w-full max-w-sm text-center">
              <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
              <p className="text-white/60 font-medium text-sm mb-4 uppercase tracking-widest">Código de Pareamento</p>
-             <h2 className="text-5xl font-bold tracking-[0.2em] text-white relative z-10">{pairingCode}</h2>
+             <h2 className="text-5xl font-bold tracking-[0.2em] text-white relative z-10">
+               {pairingCode && pairingCode.length === 8 ? `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}` : pairingCode}
+             </h2>
           </div>
           <div className="text-center space-y-3">
             <h3 className="font-semibold text-white text-xl tracking-tight">Insira o código no celular</h3>
