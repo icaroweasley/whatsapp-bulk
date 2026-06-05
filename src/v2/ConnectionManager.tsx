@@ -79,7 +79,6 @@ export default function ConnectionManager({ onConnect, onConnected, onDisconnect
           
           if (state === 'open' || state === 'connected' || state === 'CONNECTED') {
             setStatus('connected');
-            if (onConnected) onConnected(instanceName);
             
             // Try to get phone number
             const token = localStorage.getItem('evolution_token');
