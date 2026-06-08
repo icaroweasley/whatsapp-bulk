@@ -561,7 +561,6 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
       return res.status(401).json({ error: 'Token de autorização não fornecido para disparo.' });
     }
 
-    let userId = null;
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
       userId = decoded.id;
