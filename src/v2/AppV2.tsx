@@ -1223,15 +1223,14 @@ function AppV2() {
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden relative z-10 order-3 md:order-2">
             
-            {/* Desktop Top Bar (Hidden on Mobile) */}
             <header className="hidden md:flex h-20 border-b border-white/5 shrink-0 items-center justify-between px-8 bg-black/10">
               <div className="flex items-center gap-4">
                 <span className="font-semibold text-xl tracking-tight text-white">Zap<span className="font-light opacity-50">Bulk</span></span>
                 <div className="w-px h-5 bg-white/10 mx-2 hidden sm:block"></div>
                 <div className="hidden sm:flex items-center gap-2">
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${currentScreen > 1 ? 'text-emerald-400' : 'text-white/40'}`}>{currentScreen > 1 ? 'CONEXÃO ATIVA' : 'AGUARDANDO CONEXÃO'}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${instanceName ? 'text-emerald-400' : 'text-white/40'}`}>{instanceName ? 'CONEXÃO ATIVA' : 'AGUARDANDO CONEXÃO'}</span>
                   <span className="text-white/30">|</span>
-                  <span className="text-xs font-medium text-white/70">{currentScreen > 1 ? instanceName : '---'}</span>
+                  <span className="text-xs font-medium text-white/70">{instanceName || '---'}</span>
                 </div>
               </div>
               
@@ -1275,6 +1274,7 @@ function AppV2() {
 
             <div className="w-full">
               <ConnectionManager 
+                 connectedInstance={instanceName}
                  onConnected={(name) => {
                    setInstanceName(name);
                    setCurrentScreen(2);

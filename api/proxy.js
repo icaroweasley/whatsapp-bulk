@@ -50,10 +50,16 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Token de autorização não fornecido para disparo.' });
     }
 
+    let userId;
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       userId = decoded.id;
-      
+    } catch (e) {
+      Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+      return res.status(401).json({ error: 'Token inválido.' });
+    }
+
+    try {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user || user.planStatus !== 'active') {
         Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
@@ -63,9 +69,8 @@ export default async function handler(req, res) {
       // Check instance ownership for ALL requests that target a specific instance
       const instancesArray = user.instances ? user.instances.split(',').map(s => s.trim()).filter(Boolean) : [];
       const parts = pathPart.split('/').filter(Boolean);
-      // Evolution API pattern: /category/action/instanceName
       if (parts.length >= 2 && parts[0] !== 'instance' || (parts[0] === 'instance' && !['fetchInstances', 'create'].includes(parts[1]))) {
-        const requestedInstance = parts[parts.length - 1].split('?')[0]; // Get the last part, remove query strings
+        const requestedInstance = parts[parts.length - 1].split('?')[0];
         if (requestedInstance && !instancesArray.includes(requestedInstance)) {
           Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
           return res.status(403).json({ error: `Acesso negado. A instância '${requestedInstance}' não pertence à sua conta.` });
@@ -73,20 +78,22 @@ export default async function handler(req, res) {
       }
 
       // Checa a cota diária
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Zera as horas para pegar apenas o dia
+      const now = new Date();
+      // Converter explicitamente para America/Sao_Paulo
+      const spTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      spTime.setHours(0, 0, 0, 0);
 
       const usage = await prisma.dailyUsage.upsert({
         where: {
           userId_date: {
             userId: user.id,
-            date: today
+            date: spTime
           }
         },
         update: {},
         create: {
           userId: user.id,
-          date: today,
+          date: spTime,
           messageCount: 0
         }
       });
@@ -97,8 +104,9 @@ export default async function handler(req, res) {
       }
 
     } catch (e) {
+      console.error('Database/Auth logic error in proxy:', e);
       Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
-      return res.status(401).json({ error: 'Token inválido.' });
+      return res.status(500).json({ error: 'Erro de validação no banco de dados: ' + e.message });
     }
   }
   // ----------------------------------
