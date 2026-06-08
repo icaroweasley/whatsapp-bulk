@@ -561,10 +561,15 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
       return res.status(401).json({ error: 'Token de autorização não fornecido para disparo.' });
     }
 
+    let userId = null;
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
       userId = decoded.id;
-      
+    } catch (e) {
+      return res.status(401).json({ error: 'Token inválido.' });
+    }
+
+    try {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user || user.planStatus !== 'active') {
         return res.status(403).json({ error: 'Assinatura inativa. Pague o plano para fazer disparos.' });
@@ -581,8 +586,9 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
       if (usage.messageCount >= 1000) {
         return res.status(403).json({ error: 'Limite diário de 1.000 mensagens atingido.' });
       }
-    } catch (e) {
-      return res.status(401).json({ error: 'Token inválido.' });
+    } catch (e: any) {
+      console.error('Database validation error in proxy:', e);
+      return res.status(500).json({ error: 'Erro de validação no banco de dados: ' + e.message });
     }
   }
 
