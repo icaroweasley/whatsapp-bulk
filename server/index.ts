@@ -565,7 +565,8 @@ app.all(/\/api-proxy\/.*/, async (req: any, res: any) => {
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
       userId = decoded.id;
-    } catch (e) {
+    } catch (e: any) {
+      console.error('JWT Error details:', e.message, 'Token received:', token.substring(0, 10) + '...');
       return res.status(401).json({ error: 'Token inválido.' });
     }
 
