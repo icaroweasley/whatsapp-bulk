@@ -389,6 +389,7 @@ function AppV2() {
   const [isSending, setIsSending] = useState(false);
   const [isPausedUI, setIsPausedUI] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [sentCountUI, setSentCountUI] = useState(0);
   
   const isPausedRef = useRef(false);
   const isCancelledRef = useRef(false);
@@ -904,6 +905,7 @@ function AppV2() {
     setIsPausedUI(false);
     isPausedRef.current = false;
     isCancelledRef.current = false;
+    setSentCountUI(0);
     addLog(`Iniciando disparo para ${targetContacts.length} contatos...`, 'pending');
 
     let cleanBaseUrl = baseUrl.trim().replace(/\/$/, '');
@@ -1066,6 +1068,7 @@ function AppV2() {
         if (contactSuccess && !contactErrorMsg) {
            // [QA Refactor] Removed O(N^2) state map update
            sentCount++;
+           setSentCountUI(sentCount);
            addLog(`Enviado para ${contact.name || contact.number}`, 'success');
         } else {
            // [QA Refactor] Removed O(N^2) state map update
@@ -1296,7 +1299,7 @@ function AppV2() {
             </header>
 
             {/* Inner Content Scroller */}
-            <div className={`flex-1 overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0 ${currentScreen === 2 ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+            <div className={`flex-1 overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0 ${currentScreen === 2 || currentScreen === 3 ? 'overflow-hidden' : 'overflow-y-auto'}`}>
 
         
         {/* SCREEN 1: CONNECTION */}
@@ -1551,10 +1554,10 @@ function AppV2() {
 
         {/* SCREEN 3: BROADCAST */}
         {currentScreen === 3 && (
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full min-h-0">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
+            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-y-auto custom-scrollbar group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
               <div className="relative z-10 flex flex-col h-full w-full">
@@ -1648,7 +1651,7 @@ function AppV2() {
             </div>
 
             {/* Right Panel: Summary & Console */}
-            <div className="w-full lg:w-1/2 flex flex-col gap-6">
+            <div className="w-full lg:w-1/2 flex flex-col gap-6 min-h-0">
               
               {/* Preview Card */}
               <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col relative overflow-hidden group">
@@ -1722,10 +1725,22 @@ function AppV2() {
               <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
                 <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4">Resumo do Disparo</h3>
-                <div className="text-7xl font-light tracking-tighter text-white mb-3">
-                  {targetContacts.length}
-                </div>
-                <p className="text-sm text-white/60 font-medium">contatos na fila de envio</p>
+                {isSending || sentCountUI > 0 ? (
+                  <>
+                    <div className="text-7xl font-light tracking-tighter text-white mb-3 flex items-baseline justify-center gap-2">
+                      <span>{sentCountUI}</span>
+                      <span className="text-3xl text-white/40">/ {targetContacts.length}</span>
+                    </div>
+                    <p className="text-sm text-emerald-400 font-medium">contatos enviados</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-7xl font-light tracking-tighter text-white mb-3">
+                      {targetContacts.length}
+                    </div>
+                    <p className="text-sm text-white/60 font-medium">contatos na fila de envio</p>
+                  </>
+                )}
                 
                 {!isSending ? (
                   <button 
