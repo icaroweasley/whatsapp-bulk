@@ -1750,14 +1750,14 @@ function AppV2() {
       {showProgressModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="w-full max-w-5xl bg-[#0a0a0f] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20 shrink-0">
+            <div className="p-4 md:p-6 border-b border-white/10 flex justify-between items-center bg-black/20 shrink-0">
               <h2 className="text-xl font-light tracking-tight text-white">Progresso do <span className="font-serif italic text-white/80">Disparo</span></h2>
               <button onClick={() => setShowProgressModal(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors">
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
             
-            <div className="p-6 flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden">
+            <div className="p-4 md:p-6 flex-1 flex flex-col md:flex-row gap-4 md:gap-6 min-h-0 overflow-y-auto md:overflow-hidden">
                {/* MODAL LEFT: Summary Card */}
                <div className="w-full md:w-1/3 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
