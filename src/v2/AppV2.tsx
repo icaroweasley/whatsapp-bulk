@@ -1558,7 +1558,7 @@ function AppV2() {
           <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative group">
+            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
               <div className="relative z-10 flex flex-col w-full">
