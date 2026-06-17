@@ -3,6 +3,42 @@ import type { ChangeEvent } from 'react';
 import ConnectionManager from './ConnectionManager';
 import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2, Plug } from 'lucide-react';
 
+// --- HACK PARA EVITAR PAUSA QUANDO A ABA FICA EM SEGUNDO PLANO ---
+const createSleepWorker = () => {
+  if (typeof window === 'undefined') return null;
+  const code = `
+    self.onmessage = function(e) {
+      setTimeout(() => self.postMessage(e.data.id), e.data.delay);
+    };
+  `;
+  const blob = new Blob([code], { type: 'application/javascript' });
+  return new Worker(URL.createObjectURL(blob));
+};
+
+let sleepWorker: Worker | null = null;
+let sleepIdCounter = 0;
+
+const unthrottledSleep = (ms: number): Promise<void> => {
+  if (typeof window === 'undefined') return new Promise(r => setTimeout(r, ms));
+  if (!sleepWorker) sleepWorker = createSleepWorker();
+  
+  return new Promise(resolve => {
+    if (!sleepWorker) {
+      setTimeout(resolve, ms);
+      return;
+    }
+    const id = ++sleepIdCounter;
+    const handler = (e: MessageEvent) => {
+      if (e.data === id) {
+        sleepWorker!.removeEventListener('message', handler);
+        resolve();
+      }
+    };
+    sleepWorker.addEventListener('message', handler);
+    sleepWorker.postMessage({ id, delay: ms });
+  });
+};
+
 interface Contact {
   id: string;
   pushName?: string;
@@ -879,7 +915,7 @@ function AppV2() {
 
     for (let i = 0; i < targetContacts.length; i++) {
       while (isPausedRef.current && !isCancelledRef.current) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await unthrottledSleep(1000);
       }
       if (isCancelledRef.current) {
         addLog(`Disparo cancelado pelo usuário.`, 'error');
@@ -920,7 +956,7 @@ function AppV2() {
         let typingWaited = 0;
         while(typingWaited < typingDelayMs) {
            if (isCancelledRef.current) break;
-           await new Promise(resolve => setTimeout(resolve, 500));
+           await unthrottledSleep(500);
            typingWaited += 500;
         }
         if (isCancelledRef.current) {
@@ -940,33 +976,50 @@ function AppV2() {
             break; // Stop the entire loop if no instance is selected
         }
 
+        const fetchWithRetry = async (endpoint: string, body: any, maxRetries = 2) => {
+           let lastError;
+           for (let attempt = 0; attempt <= maxRetries; attempt++) {
+              if (attempt > 0) {
+                 addLog(`Tentativa ${attempt + 1} para ${contact.number}...`, 'pending');
+                 await unthrottledSleep(2000);
+              }
+              const response = await fetch(`/api-proxy${endpoint}`, {
+                 method: 'POST',
+                 headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
+                 body: JSON.stringify(body)
+              });
+              const textResponse = await response.text();
+              if (response.ok) return true;
+              
+              let errStr = response.status.toString();
+              try { 
+                const parsed = JSON.parse(textResponse);
+                let msg = parsed?.response?.message || parsed?.message || parsed?.error || "";
+                if (Array.isArray(msg)) msg = msg[0];
+                if (msg) errStr += ' - ' + msg;
+              } catch(e) {
+                if (textResponse && textResponse.length < 150) errStr += ' - ' + textResponse;
+              }
+              lastError = new Error(errStr);
+              
+              // Only retry on 500, 502, 503, 504
+              if (![500, 502, 503, 504].includes(response.status) && !errStr.includes('500')) {
+                 throw lastError; 
+              }
+           }
+           throw lastError;
+        };
+
         const sendText = async (textToSend: string) => {
            const endpoint = `/message/sendText/${activeInstance}`;
-           const response = await fetch(`/api-proxy${endpoint}`, {
-              method: 'POST',
-              headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
-              body: JSON.stringify({ number: targetJid, text: textToSend })
-           });
-           const textResponse = await response.text();
-           if (!response.ok) {
-               let err = response.status.toString();
-               try { 
-                 const parsed = JSON.parse(textResponse);
-                 let msg = parsed?.response?.message || parsed?.message || parsed?.error || "";
-                 if (Array.isArray(msg)) msg = msg[0];
-                 if (msg) err += ' - ' + msg;
-               } catch(e) {
-                 if (textResponse && textResponse.length < 150) err += ' - ' + textResponse;
-               }
-              throw new Error(err);
-           }
+           await fetchWithRetry(endpoint, { number: targetJid, text: textToSend });
         };
 
         try {
           if (mediaAttachments.length > 0) {
              if (textPosition === 'before' && personalizedMessage) {
                  await sendText(personalizedMessage);
-                 await new Promise(resolve => setTimeout(resolve, 2000));
+                 await unthrottledSleep(2000);
              }
 
              let finalMediaAttachments = mediaAttachments;
@@ -989,34 +1042,15 @@ function AppV2() {
                   media: finalMedia
                 };
 
-                const response = await fetch(`/api-proxy${endpoint}`, {
-                  method: 'POST',
-                  headers: { ...getHeaders(), 'x-target-url': cleanBaseUrl },
-                  body: JSON.stringify(body)
-                });
-
-                const textResponse = await response.text();
-                
-                if (!response.ok) {
-                   let err = response.status.toString();
-                   try { 
-                     const parsed = JSON.parse(textResponse);
-                     let msg = parsed?.response?.message || parsed?.message || parsed?.error || "";
-                     if (Array.isArray(msg)) msg = msg[0];
-                     if (msg) err += ' - ' + msg;
-                   } catch(e) {
-                     if (textResponse && textResponse.length < 150) err += ' - ' + textResponse;
-                   }
-                   throw new Error(err);
-                }
+                await fetchWithRetry(endpoint, body);
 
                 if (mIndex < finalMediaAttachments.length - 1) {
-                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  await unthrottledSleep(1500);
                 }
              }
 
              if (textPosition === 'after' && personalizedMessage) {
-                 await new Promise(resolve => setTimeout(resolve, 2000));
+                 await unthrottledSleep(2000);
                  await sendText(personalizedMessage);
              }
              contactSuccess = true;
@@ -1061,10 +1095,10 @@ function AppV2() {
         while (waited < delayMs) {
           if (isCancelledRef.current) break;
           while (isPausedRef.current && !isCancelledRef.current) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await unthrottledSleep(1000);
           }
           if (isCancelledRef.current) break;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await unthrottledSleep(500);
           waited += 500;
         }
         if (isCancelledRef.current) {
