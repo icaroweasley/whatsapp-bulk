@@ -390,6 +390,7 @@ function AppV2() {
   const [isPausedUI, setIsPausedUI] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [sentCountUI, setSentCountUI] = useState(0);
+  const [showProgressModal, setShowProgressModal] = useState(false);
   
   const isPausedRef = useRef(false);
   const isCancelledRef = useRef(false);
@@ -1299,7 +1300,7 @@ function AppV2() {
             </header>
 
             {/* Inner Content Scroller */}
-            <div className={`flex-1 overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0 ${currentScreen === 2 || currentScreen === 3 ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+            <div className={`flex-1 overflow-x-hidden p-4 md:p-8 custom-scrollbar flex flex-col min-h-0 ${currentScreen === 2 ? 'overflow-hidden' : 'overflow-y-auto'}`}>
 
         
         {/* SCREEN 1: CONNECTION */}
@@ -1554,13 +1555,13 @@ function AppV2() {
 
         {/* SCREEN 3: BROADCAST */}
         {currentScreen === 3 && (
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full min-h-0">
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 w-full">
             
             {/* Left Panel: Compose Message */}
-            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative overflow-y-auto custom-scrollbar group">
+            <div className="w-full lg:w-1/2 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-8 flex flex-col relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
               
-              <div className="relative z-10 flex flex-col h-full w-full">
+              <div className="relative z-10 flex flex-col w-full">
                 <button onClick={() => setCurrentScreen(2)} className="flex items-center gap-2 text-white/50 hover:text-white text-xs mb-8 transition-colors w-max font-medium uppercase tracking-wider">
                 <ArrowLeft size={14} /> Voltar
               </button>
@@ -1721,13 +1722,49 @@ function AppV2() {
                 </div>
               </div>
 
-              {/* Summary Card */}
-              <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 lg:p-10 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
+              {/* Start Broadcast Button */}
+              <button 
+                onClick={() => {
+                  setShowProgressModal(true);
+                  if (!isSending && targetContacts.length > 0) startBroadcast();
+                }}
+                disabled={targetContacts.length === 0 || (!message && mediaAttachments.length === 0)}
+                className="w-full bg-white text-black rounded-[2rem] p-6 flex justify-center items-center gap-4 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.1)] shrink-0"
+              >
+                <span className="text-xl font-semibold">{isSending || sentCountUI > 0 ? 'Acompanhar Disparo' : 'Iniciar Disparo'}</span>
+                <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
+                  <Play size={24} fill="currentColor" className="text-black ml-1" />
+                </div>
+              </button>
+
+            </div>
+          </div>
+        )}
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Modal */}
+      {showProgressModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="w-full max-w-5xl bg-[#0a0a0f] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20 shrink-0">
+              <h2 className="text-xl font-light tracking-tight text-white">Progresso do <span className="font-serif italic text-white/80">Disparo</span></h2>
+              <button onClick={() => setShowProgressModal(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 flex flex-col md:flex-row gap-6 min-h-0 overflow-hidden">
+               {/* MODAL LEFT: Summary Card */}
+               <div className="w-full md:w-1/3 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] p-6 shrink-0 flex flex-col justify-center items-center text-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none group-hover:opacity-100 transition-opacity duration-700"></div>
                 <h3 className="text-xs text-white/50 uppercase tracking-[0.2em] font-semibold mb-4">Resumo do Disparo</h3>
                 {isSending || sentCountUI > 0 ? (
                   <>
-                    <div className="text-7xl font-light tracking-tighter text-white mb-3 flex items-baseline justify-center gap-2">
+                    <div className="text-6xl font-light tracking-tighter text-white mb-3 flex items-baseline justify-center gap-2">
                       <span>{sentCountUI}</span>
                       <span className="text-3xl text-white/40">/ {targetContacts.length}</span>
                     </div>
@@ -1735,7 +1772,7 @@ function AppV2() {
                   </>
                 ) : (
                   <>
-                    <div className="text-7xl font-light tracking-tighter text-white mb-3">
+                    <div className="text-6xl font-light tracking-tighter text-white mb-3">
                       {targetContacts.length}
                     </div>
                     <p className="text-sm text-white/60 font-medium">contatos na fila de envio</p>
@@ -1744,47 +1781,43 @@ function AppV2() {
                 
                 {!isSending ? (
                   <button 
-                    onClick={startBroadcast}
+                    onClick={() => {
+                       if (!isSending && targetContacts.length > 0) startBroadcast();
+                    }}
                     disabled={targetContacts.length === 0 || (!message && mediaAttachments.length === 0)}
-                    className="mt-10 bg-white text-black rounded-full pl-8 pr-3 py-3 flex items-center gap-6 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                    className="mt-8 bg-white text-black rounded-full px-6 py-3 flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:bg-white/20 disabled:text-white shadow-[0_0_30px_rgba(255,255,255,0.2)] w-full justify-center"
                   >
-                    <span className="text-base font-semibold">Iniciar Disparo</span>
-                    <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
-                      <Play size={20} fill="currentColor" className="text-black ml-1" />
-                    </div>
+                    <span className="text-sm font-semibold">Iniciar Disparo</span>
+                    <Play size={16} fill="currentColor" />
                   </button>
                 ) : (
-                  <div className="mt-10 flex gap-4">
+                  <div className="mt-8 flex flex-col gap-3 w-full">
                     <button 
                       onClick={() => {
                         isPausedRef.current = !isPausedRef.current;
                         setIsPausedUI(isPausedRef.current);
                       }}
-                      className={`liquid-glass rounded-full pl-6 pr-3 py-2 flex items-center gap-4 transition-all hover:scale-105 \${isPausedUI ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-white/10 text-white border-white/20'} border`}
+                      className={`liquid-glass rounded-full px-6 py-3 flex justify-center items-center gap-3 transition-all hover:scale-105 w-full \${isPausedUI ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-white/10 text-white border-white/20'} border`}
                     >
                       <span className="text-sm font-semibold">{isPausedUI ? 'Retomar' : 'Pausar'}</span>
-                      <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center">
-                        {isPausedUI ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
-                      </div>
+                      {isPausedUI ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
                     </button>
                     <button 
                       onClick={() => {
                         isCancelledRef.current = true;
                       }}
-                      className="liquid-glass border border-red-500/50 bg-red-500/10 text-red-400 rounded-full pl-6 pr-3 py-2 flex items-center gap-4 transition-all hover:scale-105 hover:bg-red-500/20"
+                      className="liquid-glass border border-red-500/50 bg-red-500/10 text-red-400 rounded-full px-6 py-3 flex justify-center items-center gap-3 transition-all hover:scale-105 hover:bg-red-500/20 w-full"
                     >
                       <span className="text-sm font-semibold">Cancelar</span>
-                      <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                        <Square size={14} fill="currentColor" />
-                      </div>
+                      <Square size={14} fill="currentColor" />
                     </button>
                   </div>
                 )}
-              </div>
-
-              {/* Activity Console */}
-              <div className="bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex-1 flex flex-col overflow-hidden min-h-[250px]">
-                 <div className="px-6 py-5 flex justify-between items-center border-b border-white/5">
+               </div>
+               
+               {/* MODAL RIGHT: Activity Console */}
+               <div className="w-full md:w-2/3 bg-black/30 backdrop-blur-xl border border-white/5 shadow-inner rounded-[2rem] flex flex-col overflow-hidden min-h-[300px]">
+                 <div className="px-6 py-5 flex justify-between items-center border-b border-white/5 shrink-0">
                    <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Console de Atividade</span>
                    <button onClick={clearLogs} className="text-[10px] uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors">Limpar</button>
                  </div>
@@ -1807,16 +1840,11 @@ function AppV2() {
                    )}
                    <div ref={logsEndRef} />
                  </div>
-              </div>
-
-            </div>
-          </div>
-        )}
-
+               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
