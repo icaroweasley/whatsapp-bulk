@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useDeferredValue, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import ConnectionManager from './ConnectionManager';
-import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2, Plug } from 'lucide-react';
+import { Play, CheckCircle2, Upload, Search, Trash2, Users, MessageSquare, Image as ImageIcon, ArrowRight, ArrowLeft, Save, FolderOpen, Plus, Pause, Square, Download, Loader2, Plug, Pencil, Check, X, UserPlus } from 'lucide-react';
 
 // --- HACK PARA EVITAR PAUSA QUANDO A ABA FICA EM SEGUNDO PLANO ---
 const createSleepWorker = () => {
@@ -312,6 +312,48 @@ function AppV2() {
   const [listName, setListName] = useState('');
   const [selectedListId, setSelectedListId] = useState('');
   const [savedLists, setSavedLists] = useState<SavedList[]>([]);
+
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [editingContactName, setEditingContactName] = useState('');
+  const [showNewContactForm, setShowNewContactForm] = useState(false);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
+
+  const saveEditedContact = (id: string) => {
+    setTargetContacts(prev => prev.map(c => 
+      c.id === id ? { ...c, name: editingContactName } : c
+    ));
+    setEditingContactId(null);
+  };
+
+  const handleAddNewContact = () => {
+    if (!newContactPhone.trim()) {
+      alert("O telefone é obrigatório.");
+      return;
+    }
+    const cleanPhone = newContactPhone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      alert("Número de telefone inválido.");
+      return;
+    }
+    
+    const newContact: Contact = {
+      id: `${cleanPhone}@s.whatsapp.net`,
+      name: newContactName.trim() || undefined,
+      number: cleanPhone,
+      status: 'pending'
+    };
+    
+    if (targetContacts.some(c => c.id === newContact.id)) {
+       alert("Este número já está na lista alvo.");
+       return;
+    }
+    
+    setTargetContacts(prev => [newContact, ...prev]);
+    setNewContactName('');
+    setNewContactPhone('');
+    setShowNewContactForm(false);
+  };
 
   useEffect(() => {
     if (token) fetchLists();
@@ -1441,10 +1483,43 @@ function AppV2() {
               <div className="p-4 pb-2 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-medium text-white tracking-tight">Lista Alvo</h2>
-                  <span className="liquid-glass border border-white/10 px-3 py-1 rounded-full text-[10px] md:text-xs font-medium text-white/90 whitespace-nowrap shrink-0 ml-2">
-                    {targetContacts.length} contatos
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setShowNewContactForm(!showNewContactForm)}
+                      className="liquid-glass border border-white/10 px-2 py-1 rounded-full text-[10px] md:text-xs font-medium text-white/90 hover:bg-white/10 transition-colors flex items-center gap-1"
+                    >
+                      <UserPlus size={12} /> Novo
+                    </button>
+                    <span className="liquid-glass border border-white/10 px-3 py-1 rounded-full text-[10px] md:text-xs font-medium text-white/90 whitespace-nowrap shrink-0">
+                      {targetContacts.length} contatos
+                    </span>
+                  </div>
                 </div>
+
+                {showNewContactForm && (
+                  <div className="liquid-glass border border-white/10 p-3 rounded-xl flex flex-col gap-2 mt-2 mb-1">
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={newContactName}
+                        onChange={(e) => setNewContactName(e.target.value)}
+                        placeholder="Nome (opcional)"
+                        className="flex-1 w-1/2 liquid-glass rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none"
+                      />
+                      <input 
+                        type="text" 
+                        value={newContactPhone}
+                        onChange={(e) => setNewContactPhone(e.target.value)}
+                        placeholder="556799999999"
+                        className="flex-1 w-1/2 liquid-glass rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 mt-1">
+                      <button onClick={() => setShowNewContactForm(false)} className="text-[10px] text-white/50 hover:text-white/80 uppercase font-bold px-2">Cancelar</button>
+                      <button onClick={handleAddNewContact} className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-3 py-1 rounded-lg text-[10px] uppercase font-bold transition-colors">Adicionar</button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="relative">
                   <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
@@ -1512,16 +1587,55 @@ function AppV2() {
                     </div>
                     
                     {filteredTargetContacts.map(contact => (
-                      <div key={contact.id} onClick={() => toggleTargetSelection(contact.id)} className={`rounded-xl p-2 flex items-center transition-all cursor-pointer border ${selectedTargetContacts.has(contact.id) ? 'bg-emerald-500/15 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                        <input 
-                          type="checkbox" 
-                          checked={selectedTargetContacts.has(contact.id)}
-                          readOnly
-                          className="ml-1 mr-3 rounded-sm border-white/20 bg-black/40 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
-                        />
-                        <div className="flex-1 flex flex-col min-w-0">
-                          <span className="text-sm font-medium text-white truncate leading-tight">{contact.name || contact.pushName || 'Desconhecido'}</span>
-                          <span className="text-xs text-white/50 truncate mt-0.5">{contact.number}</span>
+                      <div key={contact.id} onClick={() => {
+                         if (editingContactId !== contact.id) toggleTargetSelection(contact.id);
+                      }} className={`group/item rounded-xl p-2 flex items-center transition-all cursor-pointer border ${selectedTargetContacts.has(contact.id) ? 'bg-emerald-500/15 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                        {editingContactId !== contact.id && (
+                          <input 
+                            type="checkbox" 
+                            checked={selectedTargetContacts.has(contact.id)}
+                            readOnly
+                            className="ml-1 mr-3 rounded-sm border-white/20 bg-black/40 text-emerald-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 relative before:content-[''] before:block before:w-1.5 before:h-2.5 before:border-r-2 before:border-b-2 before:border-black before:absolute before:left-1 before:top-0 before:rotate-45 before:opacity-0 checked:before:opacity-100"
+                          />
+                        )}
+                        <div className="flex-1 flex flex-col min-w-0" onClick={e => e.stopPropagation()}>
+                          {editingContactId === contact.id ? (
+                            <div className="flex items-center gap-2 mr-2">
+                               <input 
+                                 type="text" 
+                                 autoFocus
+                                 value={editingContactName}
+                                 onChange={(e) => setEditingContactName(e.target.value)}
+                                 className="liquid-glass w-full rounded-md px-2 py-1 text-xs text-white placeholder-white/40 focus:outline-none"
+                                 onKeyDown={(e) => {
+                                   if (e.key === 'Enter') saveEditedContact(contact.id);
+                                   if (e.key === 'Escape') setEditingContactId(null);
+                                 }}
+                               />
+                               <button onClick={() => saveEditedContact(contact.id)} className="text-emerald-400 hover:text-emerald-300 p-1 bg-white/5 rounded"><Check size={14} /></button>
+                               <button onClick={() => setEditingContactId(null)} className="text-red-400 hover:text-red-300 p-1 bg-white/5 rounded"><X size={14} /></button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-white truncate leading-tight">
+                                  {contact.name || contact.pushName || 'Desconhecido'}
+                                </span>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingContactId(contact.id);
+                                    setEditingContactName(contact.name || contact.pushName || '');
+                                  }} 
+                                  className="opacity-0 group-hover/item:opacity-100 text-white/40 hover:text-white transition-opacity"
+                                  title="Editar Nome"
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                              </div>
+                              <span className="text-xs text-white/50 truncate mt-0.5">{contact.number}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
